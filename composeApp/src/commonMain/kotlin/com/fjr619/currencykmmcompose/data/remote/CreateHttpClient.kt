@@ -1,8 +1,13 @@
 package com.fjr619.currencykmmcompose.data.remote
 
+import com.fjr619.currencykmmcompose.data.remote.model.FailedResponse
+import com.fjr619.currencykmmcompose.data.remote.model.RequestException
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
@@ -37,6 +42,21 @@ fun createHttpClient(httpClientEngine: HttpClientEngine) = HttpClient(httpClient
 
     install(HttpTimeout) {
         requestTimeoutMillis = 15000
+    }
+
+    HttpResponseValidator {
+
+        //ketika ada error request non 200 akan di handle disini
+        handleResponseExceptionWithRequest { exception, _ ->
+            when(exception) {
+                is ResponseException -> {
+                    val responseException = exception.response.body<FailedResponse>()
+                    throw RequestException(
+                        message = responseException.message
+                    )
+                }
+            }
+        }
     }
 
     defaultRequest {

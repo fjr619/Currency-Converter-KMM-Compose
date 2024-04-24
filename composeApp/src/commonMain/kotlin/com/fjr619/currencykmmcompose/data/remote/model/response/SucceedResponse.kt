@@ -5,18 +5,18 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ApiResponse(
-    val meta: MetaData,
-    val data: Map<String, Currency>
+    val meta: MetaDataDto,
+    val data: Map<String, CurrencyDto>
 )
 
 @Serializable
-data class MetaData(
+data class MetaDataDto(
     @SerialName("last_updated_at")
     val lastUpdatedAt: String
 )
 
 @Serializable
-data class Currency (
+data class CurrencyDto (
     val code: String,
     var value: Double
 )

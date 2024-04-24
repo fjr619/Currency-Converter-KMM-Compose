@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fjr619.currencykmmcompose.data.local.datastore.PreferencesDataSource
+import com.fjr619.currencykmmcompose.utils.Constant
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -34,13 +35,13 @@ fun App() {
 
         //example read and write datastore
         val a = getKoin().get<PreferencesDataSource>() //or koinInject<PreferencesDataSource>()
-        val title by a.getTitle().collectAsStateWithLifecycle("", lifecycleOwner = LocalLifecycleOwner.current)
+        val title by a.getPreference(Constant.keyTitle, "").collectAsStateWithLifecycle("", lifecycleOwner = LocalLifecycleOwner.current)
 
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Button(onClick = { showContent = !showContent }) {
                 Text("Click me!")
                 coroutineScope.launch {
-                    a.saveTitle("AAAA")
+                    a.putPreference(Constant.keyTitle, "AAAA")
                 }
             }
             AnimatedVisibility(showContent) {

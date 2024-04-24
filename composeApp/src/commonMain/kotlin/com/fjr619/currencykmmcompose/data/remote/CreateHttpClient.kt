@@ -1,7 +1,7 @@
 package com.fjr619.currencykmmcompose.data.remote
 
-import com.fjr619.currencykmmcompose.data.remote.model.FailedResponse
-import com.fjr619.currencykmmcompose.data.remote.model.RequestException
+import com.fjr619.currencykmmcompose.data.remote.model.response.FailedResponse
+import com.fjr619.currencykmmcompose.data.remote.model.response.RequestException
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
@@ -62,7 +62,7 @@ fun createHttpClient(httpClientEngine: HttpClientEngine) = HttpClient(httpClient
     defaultRequest {
         url {
             host = "api.currencyapi.com"
-            encodedPath = "/v3/latest/"
+            encodedPath = "/v3/"
             protocol = URLProtocol.HTTPS
             contentType(ContentType.Application.Json)
         }

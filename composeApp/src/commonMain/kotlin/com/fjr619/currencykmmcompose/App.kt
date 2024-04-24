@@ -1,3 +1,5 @@
+package com.fjr619.currencykmmcompose
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column

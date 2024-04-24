@@ -1,3 +1,5 @@
+package com.fjr619.currencykmmcompose
+
 import platform.UIKit.UIDevice
 
 class IOSPlatform: Platform {

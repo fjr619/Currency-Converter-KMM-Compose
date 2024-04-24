@@ -1,3 +1,5 @@
+package com.fjr619.currencykmmcompose
+
 import android.os.Build
 
 class AndroidPlatform : Platform {

@@ -1,7 +1,7 @@
 package com.fjr619.currencykmmcompose
 
 import android.app.Application
-import di.initKoin
+import com.fjr619.currencykmmcompose.di.initKoin
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.logger.Level

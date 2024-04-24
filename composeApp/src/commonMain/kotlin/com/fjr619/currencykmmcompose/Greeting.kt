@@ -1,3 +1,5 @@
+package com.fjr619.currencykmmcompose
+
 class Greeting {
     private val platform = getPlatform()
 

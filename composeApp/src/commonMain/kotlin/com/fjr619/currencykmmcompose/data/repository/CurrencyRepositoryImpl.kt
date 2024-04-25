@@ -12,6 +12,7 @@ import com.fjr619.currencykmmcompose.domain.repository.CurrencyRepository
 import com.fjr619.currencykmmcompose.utils.Constant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -66,5 +67,29 @@ class CurrencyRepositoryImpl(
 
             daysDifference < 1
         } else false
+    }
+
+    override suspend fun saveSourceCurrencyCode(code: String) {
+        preferencesDataSource.putPreference(Constant.KEY_SOURCE_CURRENCY, code)
+    }
+
+    override suspend fun saveTargetCurrencyCode(code: String) {
+        preferencesDataSource.putPreference(Constant.KEY_TARGET_CURRENCY, code)
+    }
+
+    override fun readSourceCurrencyCode(): Flow<CurrencyCode> {
+        return preferencesDataSource
+            .getPreference(Constant.KEY_SOURCE_CURRENCY, Constant.DEFAULT_SOURCE_CURRENCY)
+            .map {
+                CurrencyCode.valueOf(it)
+            }
+    }
+
+    override fun readTargetCurrencyCode(): Flow<CurrencyCode> {
+        return preferencesDataSource
+            .getPreference(Constant.KEY_TARGET_CURRENCY, Constant.DEFAULT_TARGET_CURRENCY)
+            .map {
+                CurrencyCode.valueOf(it)
+            }
     }
 }

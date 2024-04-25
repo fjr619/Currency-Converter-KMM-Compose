@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fjr619.currencykmmcompose.data.local.datastore.PreferencesDataSource
+import com.fjr619.currencykmmcompose.ui.screens.home.HomeScreen
 import com.fjr619.currencykmmcompose.ui.theme.AppTheme
 import com.fjr619.currencykmmcompose.utils.Constant
 import currencykmmcompose.composeapp.generated.resources.Res
@@ -40,37 +41,6 @@ fun App(
         darkTheme = darkTheme,
         dynamicColor = dynamicColor
     ) {
-        Surface(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            var showContent by remember { mutableStateOf(false) }
-
-            val coroutineScope = rememberCoroutineScope()
-
-            //example read and write datastore
-            val a = getKoin().get<PreferencesDataSource>() //or koinInject<PreferencesDataSource>()
-            val title by a.getPreference(Constant.keyTitle, "")
-                .collectAsStateWithLifecycle("", lifecycleOwner = LocalLifecycleOwner.current)
-
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Button(onClick = { showContent = !showContent }) {
-                    Text("Click me!")
-                    coroutineScope.launch {
-                        a.putPreference(Constant.keyTitle, "AAAA")
-                    }
-                }
-                AnimatedVisibility(showContent) {
-                    val greeting = remember { Greeting().greet() }
-                    Column(
-                        Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Image(painterResource(Res.drawable.compose_multiplatform), null)
-                        Text("Compose: $greeting $title")
-                    }
-                }
-            }
-        }
-
+        HomeScreen()
     }
 }

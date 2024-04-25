@@ -18,6 +18,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.fjr619.currencykmmcompose.data.local.datastore.PreferencesDataSource
 import com.fjr619.currencykmmcompose.ui.screens.home.HomeScreen
 import com.fjr619.currencykmmcompose.ui.theme.AppTheme
@@ -41,6 +45,18 @@ fun App(
         darkTheme = darkTheme,
         dynamicColor = dynamicColor
     ) {
-        HomeScreen()
+        val navController: NavHostController = rememberNavController()
+
+        NavHost(
+            navController = navController,
+            startDestination = "Home"
+        ) {
+            composable(
+                route = "Home"
+            ) {
+                HomeScreen()
+            }
+        }
+
     }
 }

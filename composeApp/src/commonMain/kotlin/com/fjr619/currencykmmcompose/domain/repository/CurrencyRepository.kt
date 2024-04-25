@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface CurrencyRepository {
 //    suspend fun getLatestExchangeRates(): Result<List<Currency>>
-    suspend fun isDataFresh(): Boolean
+    suspend fun isDataFresh(): Flow<Boolean>
 //    suspend fun saveSourceCurrencyCode(code: String)
 //    suspend fun saveTargetCurrencyCode(code: String)
 //    fun readSourceCurrencyCode(): Flow<CurrencyCode>

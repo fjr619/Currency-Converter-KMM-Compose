@@ -52,6 +52,7 @@ kotlin {
 
             implementation(libs.lifecycle.viewmodel.compose)
             implementation(libs.lifecycle.runtime.compose)
+            implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha02")
 
         }
 

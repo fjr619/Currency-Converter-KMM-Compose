@@ -4,7 +4,6 @@ import com.fjr619.currencykmmcompose.data.local.database.LocalDataSource
 import com.fjr619.currencykmmcompose.data.local.database.model.toDomain
 import com.fjr619.currencykmmcompose.data.local.datastore.PreferencesDataSource
 import com.fjr619.currencykmmcompose.data.remote.RemoteDataSource
-import com.fjr619.currencykmmcompose.data.remote.model.response.CurrencyDto
 import com.fjr619.currencykmmcompose.data.remote.model.response.RequestException
 import com.fjr619.currencykmmcompose.data.remote.model.response.toDomain
 import com.fjr619.currencykmmcompose.data.remote.model.response.toEntity
@@ -12,14 +11,27 @@ import com.fjr619.currencykmmcompose.domain.model.Currency
 import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
 import com.fjr619.currencykmmcompose.domain.repository.CurrencyRepository
 import com.fjr619.currencykmmcompose.utils.Constant
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.until
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class CurrencyRepositoryImpl(
     private val remoteDataSource: RemoteDataSource,
@@ -32,29 +44,47 @@ class CurrencyRepositoryImpl(
         }
     }
 
-    override suspend fun isDataFresh(): Boolean {
+    private fun tickerFlow(period: Duration, initialDelay: Duration = Duration.ZERO) = flow {
+        delay(initialDelay)
+        while (true) {
+            emit(Unit)
+            delay(period)
+        }
+    }
+
+    override suspend fun isDataFresh(): Flow<Boolean> {
         val savedTimestamp = preferencesDataSource.getPreference(
             key = Constant.KEY_TIMESTAMP,
             defaultValue = 0L
         ).first()
 
-        return if (savedTimestamp != 0L) {
-            val currentInstant = Clock.System.now()
-            val savedInstant = Instant.fromEpochMilliseconds(savedTimestamp)
+        if (savedTimestamp != 0L) {
 
-            val currentDateTime = currentInstant.toLocalDateTime(TimeZone.currentSystemDefault())
+            var currentDateTime: LocalDateTime
+            val savedInstant = Instant.fromEpochMilliseconds(savedTimestamp)
             val savedDateTime = savedInstant.toLocalDateTime(TimeZone.currentSystemDefault())
 
-            val difference = currentDateTime.time.toSecondOfDay() - savedDateTime.time.toSecondOfDay()
+            val result = tickerFlow(1.seconds).map {
+                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            }.map {
+                currentDateTime = it
+                val difference = savedInstant.until(
+                    currentDateTime.toInstant(TimeZone.currentSystemDefault()),
+                    DateTimeUnit.MINUTE,
+                    TimeZone.currentSystemDefault()
+                )
 
-            println("currentDateTime $currentDateTime")
-            println("savedDateTime $savedDateTime")
-            println("difference $difference")
+                println("currentDateTime $currentDateTime")
+                println("savedDateTime $savedDateTime")
+                println("difference ${difference}")
 
-            val daysDifference = currentDateTime.date.dayOfYear - savedDateTime.date.dayOfYear
-//
-            daysDifference < 1
-        } else false
+                difference < 5L
+            }.flowOn(Dispatchers.IO)
+
+
+
+            return result
+        } else return flow { emit(false) }
     }
 
     private suspend fun getLatestExchangeRatesFromNetwork(): Result<List<Currency>> {
@@ -77,14 +107,17 @@ class CurrencyRepositoryImpl(
             if (avaiableCurrencies.isNotEmpty()) {
                 println("FETCHING NETWORK AND SAVE DATABASE")
                 localDataSource.cleanUp()
-                localDataSource.insertCurrencyDatas( avaiableCurrencies.map {
+                localDataSource.insertCurrencyDatas(avaiableCurrencies.map {
                     it.toEntity()
                 })
             }
 
             //persist a timestamp
 //            val lastUpdate = response.meta.lastUpdatedAt
-            preferencesDataSource.putPreference(Constant.KEY_TIMESTAMP, Clock.System.now().toEpochMilliseconds())
+            preferencesDataSource.putPreference(
+                Constant.KEY_TIMESTAMP,
+                Clock.System.now().toEpochMilliseconds()
+            )
             return Result.success(value = avaiableCurrencies.map { it.toDomain() })
 
         } catch (e: RequestException) {
@@ -93,8 +126,8 @@ class CurrencyRepositoryImpl(
     }
 
     private suspend fun cacheTheData(
-        onSucceed:(List<Currency>) -> Unit,
-        onFailled:() -> Unit
+        onSucceed: (List<Currency>) -> Unit,
+        onFailled: () -> Unit
     ) {
         val fetchedData = getLatestExchangeRatesFromNetwork()
         if (fetchedData.isSuccess) {
@@ -102,7 +135,7 @@ class CurrencyRepositoryImpl(
             data?.let { nonNullData ->
                 println("FETCHING NETWORK DONE, HAS DATA")
                 onSucceed(nonNullData)
-            }?: run {
+            } ?: run {
                 println("FETCHING NETWORK DONE, HAS NULL DATA")
                 onFailled()
             }
@@ -115,15 +148,15 @@ class CurrencyRepositoryImpl(
     }
 
     override suspend fun fetchNewRates(
-        onSucceed:(List<Currency>) -> Unit,
-        onFailled:() -> Unit
+        onSucceed: (List<Currency>) -> Unit,
+        onFailled: () -> Unit
     ) {
         val localCache = readLocalCurrencyDatas().first()
         if (localCache.isSuccess) {
             val data = localCache.getOrNull()
             data?.let { nonNullData ->
                 if (nonNullData.isNotEmpty()) {
-                    if (!isDataFresh()) {
+                    if (!isDataFresh().first()) {
                         println("DATA NOT FRESH")
                         cacheTheData(onSucceed, onFailled)
                     } else {

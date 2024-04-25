@@ -2,6 +2,7 @@ package com.fjr619.currencykmmcompose.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fjr619.currencykmmcompose.domain.model.RateStatus
 import com.fjr619.currencykmmcompose.domain.repository.CurrencyRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,6 +54,13 @@ class HomeViewModel(
                 }
             )
 
+            currencyRepository.isDataFresh().collect { fresh ->
+                _state.update {
+                    it.copy(
+                        rateState = if (fresh) RateStatus.Fresh else RateStatus.Stale
+                    )
+                }
+            }
         }
     }
 }

@@ -7,7 +7,7 @@ import org.mongodb.kbson.BsonObjectId
 import org.mongodb.kbson.ObjectId
 
 @Serializable
-open class Currency: RealmObject {
+open class CurrencyDao: RealmObject {
     @PrimaryKey
     var _id: ObjectId = BsonObjectId()
     var code: String = ""

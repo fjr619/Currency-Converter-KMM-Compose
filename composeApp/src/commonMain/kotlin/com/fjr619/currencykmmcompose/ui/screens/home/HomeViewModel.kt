@@ -2,10 +2,14 @@ package com.fjr619.currencykmmcompose.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
 import com.fjr619.currencykmmcompose.domain.model.RateStatus
 import com.fjr619.currencykmmcompose.domain.repository.CurrencyRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -45,6 +49,9 @@ class HomeViewModel(
                 saveTargetCurrencyCode(event.code)
             }
 
+            is HomeEvent.SwitchCurrencies -> {
+                switchCurrencies()
+            }
         }
     }
 
@@ -53,6 +60,7 @@ class HomeViewModel(
             _state.update {
                 it.copy(loading = true)
             }
+
             currencyRepository.fetchNewRates(
                 onSucceed = { list ->
                     _state.update {
@@ -90,33 +98,23 @@ class HomeViewModel(
 
     private fun readSourceCurrency() {
         viewModelScope.launch {
-            currencyRepository.readSourceCurrencyCode().collect { currencyCode ->
-               val selectedCurrency = _state.value.currencyRates.find { it.code == currencyCode.name }
-                selectedCurrency?.let { nonNullData ->
-                    _state.update {
-                        it.copy(
-                            sourceCurrency = nonNullData
-                        )
+            currencyRepository.readSourceCurrencyCode().collectLatest { currencyCode ->
+                state.collect { homeuiState ->
+                    val selectedCurrency = homeuiState.currencyRates.find { it.code == currencyCode.name }
+                    selectedCurrency?.let { nonNullData ->
+                        _state.update {
+                            it.copy(
+                                sourceCurrency = nonNullData
+                            )
+                        }
                     }
                 }
+
             }
         }
     }
 
-    private fun readTargetCurrency() {
-        viewModelScope.launch {
-            currencyRepository.readTargetCurrencyCode().collect { currencyCode ->
-                val selectedCurrency = _state.value.currencyRates.find { it.code == currencyCode.name }
-                selectedCurrency?.let { nonNullData ->
-                    _state.update {
-                        it.copy(
-                            targetCurrency = nonNullData
-                        )
-                    }
-                }
-            }
-        }
-    }
+
 
     private fun saveTargetCurrencyCode(code: String) {
         viewModelScope.launch {
@@ -124,5 +122,37 @@ class HomeViewModel(
         }
     }
 
+    private fun readTargetCurrency() {
+        viewModelScope.launch {
+            currencyRepository.readTargetCurrencyCode().collectLatest { currencyCode ->
+                state.collect { homeuiState ->
+                    val selectedCurrency = homeuiState.currencyRates.find { it.code == currencyCode.name }
+                    println("selectedCurrency $selectedCurrency")
+                    selectedCurrency?.let { nonNullData ->
+                        _state.update {
+                            it.copy(
+                                targetCurrency = nonNullData
+                            )
+                        }
+                    }
+                }
 
+            }
+        }
+    }
+
+    private fun switchCurrencies() {
+        viewModelScope.launch {
+            println("switchCurrencies")
+            val source = state.value.sourceCurrency
+            val target = state.value.targetCurrency
+            source?.let {
+                saveTargetCurrencyCode(it.code)
+            }
+
+            target?.let {
+                saveSourceCurrencyCode(it.code)
+            }
+        }
+    }
 }

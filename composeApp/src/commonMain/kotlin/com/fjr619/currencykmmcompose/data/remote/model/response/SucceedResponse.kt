@@ -1,5 +1,6 @@
 package com.fjr619.currencykmmcompose.data.remote.model.response
 
+import com.fjr619.currencykmmcompose.data.local.database.model.CurrencyEntity
 import com.fjr619.currencykmmcompose.domain.model.Currency
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -27,3 +28,7 @@ fun CurrencyDto.toDomain() = Currency(
     value = value
 )
 
+fun CurrencyDto.toEntity() = CurrencyEntity().apply {
+    this.code = this@toEntity.code
+    this.value = this@toEntity.value
+}

@@ -13,6 +13,8 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.resources.Resources
+import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.URLProtocol
 import io.ktor.http.contentType
@@ -22,6 +24,8 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 fun createHttpClient(httpClientEngine: HttpClientEngine) = HttpClient(httpClientEngine) {
+    expectSuccess = true
+    install(Resources)
     install(ContentNegotiation) {
         json(Json {
             prettyPrint = true
@@ -60,15 +64,15 @@ fun createHttpClient(httpClientEngine: HttpClientEngine) = HttpClient(httpClient
     }
 
     defaultRequest {
+        headers {
+            header("apikey", "cur_live_HV09ZZMGxAehfcMLxnRYPTgllLGnWEVF4Mw3x0yr")
+        }
+
         url {
             host = "api.currencyapi.com"
             encodedPath = "/v3/"
             protocol = URLProtocol.HTTPS
             contentType(ContentType.Application.Json)
-        }
-
-        headers {
-            append("apikey", "cur_live_HV09ZZMGxAehfcMLxnRYPTgllLGnWEVF4Mw3x0yr")
         }
     }
 }

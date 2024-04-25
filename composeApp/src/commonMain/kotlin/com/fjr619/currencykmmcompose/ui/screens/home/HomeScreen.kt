@@ -2,6 +2,7 @@ package com.fjr619.currencykmmcompose.ui.screens.home
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.fjr619.currencykmmcompose.ui.ViewModelFac
@@ -13,5 +14,6 @@ fun HomeScreen() {
         modifier = Modifier.fillMaxSize()
     ) {
         val viewModel = ViewModelFac.getHomeViewModel()
+        Text("Textaaaa")
     }
 }

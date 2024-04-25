@@ -16,6 +16,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -32,6 +34,8 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.until
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 class CurrencyRepositoryImpl(
     private val remoteDataSource: RemoteDataSource,
@@ -50,41 +54,6 @@ class CurrencyRepositoryImpl(
             emit(Unit)
             delay(period)
         }
-    }
-
-    override suspend fun isDataFresh(): Flow<Boolean> {
-        val savedTimestamp = preferencesDataSource.getPreference(
-            key = Constant.KEY_TIMESTAMP,
-            defaultValue = 0L
-        ).first()
-
-        if (savedTimestamp != 0L) {
-
-            var currentDateTime: LocalDateTime
-            val savedInstant = Instant.fromEpochMilliseconds(savedTimestamp)
-            val savedDateTime = savedInstant.toLocalDateTime(TimeZone.currentSystemDefault())
-
-            val result = tickerFlow(1.seconds).map {
-                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-            }.map {
-                currentDateTime = it
-                val difference = savedInstant.until(
-                    currentDateTime.toInstant(TimeZone.currentSystemDefault()),
-                    DateTimeUnit.MINUTE,
-                    TimeZone.currentSystemDefault()
-                )
-
-                println("currentDateTime $currentDateTime")
-                println("savedDateTime $savedDateTime")
-                println("difference ${difference}")
-
-                difference < 5L
-            }.flowOn(Dispatchers.IO)
-
-
-
-            return result
-        } else return flow { emit(false) }
     }
 
     private suspend fun getLatestExchangeRatesFromNetwork(): Result<List<Currency>> {
@@ -147,6 +116,38 @@ class CurrencyRepositoryImpl(
 
     }
 
+    override suspend fun isDataFresh(): Flow<Boolean> {
+        val savedTimestamp = preferencesDataSource.getPreference(
+            key = Constant.KEY_TIMESTAMP,
+            defaultValue = 0L
+        ).first()
+
+        if (savedTimestamp != 0L) {
+
+            var currentDateTime: LocalDateTime
+            val savedInstant = Instant.fromEpochMilliseconds(savedTimestamp)
+            val savedDateTime = savedInstant.toLocalDateTime(TimeZone.currentSystemDefault())
+
+            val result = tickerFlow(1.seconds).map {
+                currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val difference = savedInstant.until(
+                    currentDateTime.toInstant(TimeZone.currentSystemDefault()),
+                    DateTimeUnit.DAY,
+                    TimeZone.currentSystemDefault()
+                )
+
+//                println("currentDateTime $currentDateTime")
+//                println("savedDateTime $savedDateTime")
+//                println("difference ${difference}")
+
+                difference < 1L
+            }
+
+            return result
+
+        } else return flow { emit(false) }
+    }
+
     override suspend fun fetchNewRates(
         onSucceed: (List<Currency>) -> Unit,
         onFailled: () -> Unit
@@ -176,6 +177,30 @@ class CurrencyRepositoryImpl(
             println("ERROR READING LOCAL DATABASE")
             onFailled()
         }
+    }
+
+    override suspend fun saveSourceCurrencyCode(code: String) {
+        preferencesDataSource.putPreference(Constant.KEY_SOURCE_CURRENCY, code)
+    }
+
+    override suspend fun saveTargetCurrencyCode(code: String) {
+        preferencesDataSource.putPreference(Constant.KEY_TARGET_CURRENCY, code)
+    }
+
+    override fun readSourceCurrencyCode(): Flow<CurrencyCode> {
+        return preferencesDataSource
+            .getPreference(Constant.KEY_SOURCE_CURRENCY, Constant.DEFAULT_SOURCE_CURRENCY)
+            .map { code ->
+                CurrencyCode.valueOf(code)
+            }
+    }
+
+    override fun readTargetCurrencyCode(): Flow<CurrencyCode> {
+        return preferencesDataSource
+            .getPreference(Constant.KEY_TARGET_CURRENCY, Constant.DEFAULT_TARGET_CURRENCY)
+            .map { code ->
+                CurrencyCode.valueOf(code)
+            }
     }
 
 //    override suspend fun getLatestExchangeRates(): Result<List<Currency>> {
@@ -224,29 +249,7 @@ class CurrencyRepositoryImpl(
 //        } else false
 //    }
 //
-//    override suspend fun saveSourceCurrencyCode(code: String) {
-//        preferencesDataSource.putPreference(Constant.KEY_SOURCE_CURRENCY, code)
-//    }
-//
-//    override suspend fun saveTargetCurrencyCode(code: String) {
-//        preferencesDataSource.putPreference(Constant.KEY_TARGET_CURRENCY, code)
-//    }
-//
-//    override fun readSourceCurrencyCode(): Flow<CurrencyCode> {
-//        return preferencesDataSource
-//            .getPreference(Constant.KEY_SOURCE_CURRENCY, Constant.DEFAULT_SOURCE_CURRENCY)
-//            .map {
-//                CurrencyCode.valueOf(it)
-//            }
-//    }
-//
-//    override fun readTargetCurrencyCode(): Flow<CurrencyCode> {
-//        return preferencesDataSource
-//            .getPreference(Constant.KEY_TARGET_CURRENCY, Constant.DEFAULT_TARGET_CURRENCY)
-//            .map {
-//                CurrencyCode.valueOf(it)
-//            }
-//    }
+
 //
 //    override fun readCurrencyData(): Flow<Result<List<Currency>>> {
 //        return localDataSource.readCurrencyData().map { list ->

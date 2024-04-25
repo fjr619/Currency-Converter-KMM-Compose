@@ -19,6 +19,8 @@ class HomeViewModel(
     init {
         println("INI HOME VM")
         onEvent(HomeEvent.FetchRates)
+        onEvent(HomeEvent.ReadSourceCurrencyCode)
+        onEvent(HomeEvent.ReadTargetCurrencyCode)
     }
 
     fun onEvent(event: HomeEvent) {
@@ -26,6 +28,23 @@ class HomeViewModel(
             is HomeEvent.FetchRates -> {
                 fetchNewRates()
             }
+
+            is HomeEvent.ReadSourceCurrencyCode -> {
+                readSourceCurrency()
+            }
+
+            is HomeEvent.ReadTargetCurrencyCode -> {
+                readTargetCurrency()
+            }
+
+            is HomeEvent.SaveSourceCurrencyCode -> {
+                saveSourceCurrencyCode(event.code)
+            }
+
+            is HomeEvent.SaveTargetCurrencyCode -> {
+                saveTargetCurrencyCode(event.code)
+            }
+
         }
     }
 
@@ -34,7 +53,6 @@ class HomeViewModel(
             _state.update {
                 it.copy(loading = true)
             }
-
             currencyRepository.fetchNewRates(
                 onSucceed = { list ->
                     _state.update {
@@ -63,4 +81,48 @@ class HomeViewModel(
             }
         }
     }
+
+    private fun saveSourceCurrencyCode(code: String) {
+        viewModelScope.launch {
+            currencyRepository.saveSourceCurrencyCode(code)
+        }
+    }
+
+    private fun readSourceCurrency() {
+        viewModelScope.launch {
+            currencyRepository.readSourceCurrencyCode().collect { currencyCode ->
+               val selectedCurrency = _state.value.currencyRates.find { it.code == currencyCode.name }
+                selectedCurrency?.let { nonNullData ->
+                    _state.update {
+                        it.copy(
+                            sourceCurrency = nonNullData
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun readTargetCurrency() {
+        viewModelScope.launch {
+            currencyRepository.readTargetCurrencyCode().collect { currencyCode ->
+                val selectedCurrency = _state.value.currencyRates.find { it.code == currencyCode.name }
+                selectedCurrency?.let { nonNullData ->
+                    _state.update {
+                        it.copy(
+                            targetCurrency = nonNullData
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun saveTargetCurrencyCode(code: String) {
+        viewModelScope.launch {
+            currencyRepository.saveTargetCurrencyCode(code)
+        }
+    }
+
+
 }

@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.fjr619.currencykmmcompose.domain.model.Currency
+import com.fjr619.currencykmmcompose.domain.model.CurrencyType
 import com.fjr619.currencykmmcompose.domain.model.RateStatus
 import com.fjr619.currencykmmcompose.ui.screens.home.HomeEvent
 import com.fjr619.currencykmmcompose.ui.screens.home.HomeUiState
@@ -24,7 +25,8 @@ import com.fjr619.currencykmmcompose.ui.theme.headerColor
 fun HomeHeader(
     modifier: Modifier = Modifier,
     state: HomeUiState,
-    onEvent: (HomeEvent) -> Unit
+    onEvent: (HomeEvent) -> Unit,
+    onCurrencyTypeSelect: (CurrencyType) -> Unit
 ) {
     Column (
         modifier = modifier
@@ -44,9 +46,7 @@ fun HomeHeader(
             onSwitch = {
                 onEvent(HomeEvent.SwitchCurrencies)
             },
-            onCurrencyTypeSelect = {
-
-            }
+            onCurrencyTypeSelect = onCurrencyTypeSelect
         )
         Spacer(modifier = Modifier.height(12.dp))
     }

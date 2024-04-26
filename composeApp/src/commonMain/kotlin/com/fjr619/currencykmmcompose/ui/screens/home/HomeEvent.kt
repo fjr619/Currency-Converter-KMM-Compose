@@ -1,11 +1,17 @@
 package com.fjr619.currencykmmcompose.ui.screens.home
 
-sealed class HomeEvent {
-    data object FetchRates: HomeEvent()
-    data object SwitchCurrencies: HomeEvent()
-    data class SaveSourceCurrencyCode(val code: String): HomeEvent()
-    data class SaveTargetCurrencyCode(val code: String): HomeEvent()
+import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
+import com.fjr619.currencykmmcompose.domain.model.CurrencyType
 
-    data object ReadSourceCurrencyCode: HomeEvent()
-    data object ReadTargetCurrencyCode: HomeEvent()
+sealed class HomeEvent {
+    data object FetchRates : HomeEvent()
+    data object SwitchCurrencies : HomeEvent()
+
+    data class SaveSelectedCurrencyCode(
+        val currencyType: CurrencyType,
+        val currencyCode: CurrencyCode
+    ) : HomeEvent()
+
+    data object ReadSourceCurrencyCode : HomeEvent()
+    data object ReadTargetCurrencyCode : HomeEvent()
 }

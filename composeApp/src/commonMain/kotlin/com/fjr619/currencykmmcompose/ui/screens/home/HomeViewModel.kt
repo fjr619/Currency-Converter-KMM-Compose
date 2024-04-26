@@ -3,6 +3,7 @@ package com.fjr619.currencykmmcompose.ui.screens.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
+import com.fjr619.currencykmmcompose.domain.model.CurrencyType
 import com.fjr619.currencykmmcompose.domain.model.RateStatus
 import com.fjr619.currencykmmcompose.domain.repository.CurrencyRepository
 import kotlinx.coroutines.delay
@@ -41,12 +42,12 @@ class HomeViewModel(
                 readTargetCurrency()
             }
 
-            is HomeEvent.SaveSourceCurrencyCode -> {
-                saveSourceCurrencyCode(event.code)
-            }
-
-            is HomeEvent.SaveTargetCurrencyCode -> {
-                saveTargetCurrencyCode(event.code)
+            is HomeEvent.SaveSelectedCurrencyCode -> {
+                if (event.currencyType is CurrencyType.Source) {
+                    saveSourceCurrencyCode(event.currencyCode.name)
+                } else if (event.currencyType is CurrencyType.Target) {
+                    saveTargetCurrencyCode(event.currencyCode.name)
+                }
             }
 
             is HomeEvent.SwitchCurrencies -> {
@@ -114,8 +115,6 @@ class HomeViewModel(
         }
     }
 
-
-
     private fun saveTargetCurrencyCode(code: String) {
         viewModelScope.launch {
             currencyRepository.saveTargetCurrencyCode(code)
@@ -127,7 +126,6 @@ class HomeViewModel(
             currencyRepository.readTargetCurrencyCode().collectLatest { currencyCode ->
                 state.collect { homeuiState ->
                     val selectedCurrency = homeuiState.currencyRates.find { it.code == currencyCode.name }
-                    println("selectedCurrency $selectedCurrency")
                     selectedCurrency?.let { nonNullData ->
                         _state.update {
                             it.copy(
@@ -143,7 +141,6 @@ class HomeViewModel(
 
     private fun switchCurrencies() {
         viewModelScope.launch {
-            println("switchCurrencies")
             val source = state.value.sourceCurrency
             val target = state.value.targetCurrency
             source?.let {

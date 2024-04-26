@@ -87,9 +87,7 @@ fun HomeScreen() {
                         backgroundColor = if (key == "C") headerColor
                         else headerColor,
                         onClick = {
-                            if (key != ".") {
-//                            onEvent(MainScreenEvent.NumberButtonClicked(key))
-                            }
+                            viewModel.onEvent(HomeEvent.NumberButtonClicked(key))
                         }
                     )
                 }

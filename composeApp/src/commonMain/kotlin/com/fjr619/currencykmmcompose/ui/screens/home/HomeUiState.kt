@@ -12,7 +12,7 @@ data class HomeUiState(
     val sourceCurrency: Currency? = null,
     val targetCurrency: Currency? = null,
 
-    val sourceCurrencyAmount: String = "1000",
-    val targetCurrencyAmount: String = "50000"
+    val sourceCurrencyAmount: String = "",
+    val targetCurrencyAmount: String = ""
 ) {
 }

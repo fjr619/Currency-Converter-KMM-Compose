@@ -7,10 +7,12 @@ import com.fjr619.currencykmmcompose.domain.model.CurrencyType
 import com.fjr619.currencykmmcompose.domain.model.RateStatus
 import com.fjr619.currencykmmcompose.domain.repository.CurrencyRepository
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -21,11 +23,47 @@ class HomeViewModel(
     private val _state = MutableStateFlow(HomeUiState())
     val state = _state.asStateFlow()
 
+    private val _updatedCurrencyValue:MutableStateFlow<String> = MutableStateFlow("")
+
     init {
         println("INI HOME VM")
         onEvent(HomeEvent.FetchRates)
         onEvent(HomeEvent.ReadSourceCurrencyCode)
         onEvent(HomeEvent.ReadTargetCurrencyCode)
+
+        viewModelScope.launch {
+            _updatedCurrencyValue.collect{ value ->
+                _state.update {
+                    it.copy(
+                        sourceCurrencyAmount = value,
+                    )
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            state.collect {
+                _state.update {
+                    it.copy(
+                        targetCurrencyAmount = convert(it.sourceCurrencyAmount).toString()
+                    )
+                }
+            }
+        }
+    }
+
+
+
+    private fun convert(amount: String): Double {
+        val source = state.value.sourceCurrency?.value
+        val target = state.value.targetCurrency?.value
+
+        val exchangeRate = if (source != null && target != null) {
+            target/source
+        } else 1.0
+
+        return if (amount.isEmpty()) 0.0
+        else amount.toDouble() * exchangeRate
     }
 
     fun onEvent(event: HomeEvent) {
@@ -52,6 +90,10 @@ class HomeViewModel(
 
             is HomeEvent.SwitchCurrencies -> {
                 switchCurrencies()
+            }
+
+            is HomeEvent.NumberButtonClicked -> {
+                updateCurrencyValue(event.value)
             }
         }
     }
@@ -143,12 +185,40 @@ class HomeViewModel(
         viewModelScope.launch {
             val source = state.value.sourceCurrency
             val target = state.value.targetCurrency
+            val sourceAmount = state.value.sourceCurrencyAmount
+            val targetAmount = state.value.targetCurrencyAmount
             source?.let {
                 saveTargetCurrencyCode(it.code)
             }
 
             target?.let {
                 saveSourceCurrencyCode(it.code)
+            }
+
+//            _state.update {
+//                it.copy(
+//                    sourceCurrencyAmount = targetAmount,
+//                )
+//            }
+        }
+    }
+
+    private fun updateCurrencyValue(value: String) {
+        val currentCurrencyValue = state.value.sourceCurrencyAmount
+        _updatedCurrencyValue.update {
+            when (value) {
+                "C" -> "0"
+                else ->
+                    if (currentCurrencyValue == "0") value else {
+                        (currentCurrencyValue + value).run {
+                            if (this.length > 12) {
+                                this.substring(0, 12)
+                            } else {
+                                this
+                            }
+                        }
+
+                    }
             }
         }
     }

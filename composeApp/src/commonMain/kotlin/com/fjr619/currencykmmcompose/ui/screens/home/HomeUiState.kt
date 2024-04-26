@@ -10,6 +10,9 @@ data class HomeUiState(
     val loading: Boolean = false,
     val currencyRates: List<Currency> = emptyList(),
     val sourceCurrency: Currency? = null,
-    val targetCurrency: Currency? = null
+    val targetCurrency: Currency? = null,
+
+    val sourceCurrencyAmount: String = "1000",
+    val targetCurrencyAmount: String = "50000"
 ) {
 }

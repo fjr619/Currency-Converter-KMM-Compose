@@ -14,7 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.fjr619.currencykmmcompose.domain.model.AmountInputType
 import com.fjr619.currencykmmcompose.domain.model.Currency
+import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
 import com.fjr619.currencykmmcompose.domain.model.CurrencyType
 import com.fjr619.currencykmmcompose.domain.model.RateStatus
 import com.fjr619.currencykmmcompose.ui.screens.home.HomeEvent
@@ -33,7 +35,7 @@ fun HomeHeader(
             .fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
             .background(headerColor)
-            .padding(16.dp)
+            .padding(24.dp)
     ) {
         RatesStatus(
             status = state.rateState,
@@ -49,5 +51,18 @@ fun HomeHeader(
             onCurrencyTypeSelect = onCurrencyTypeSelect
         )
         Spacer(modifier = Modifier.height(12.dp))
+
+        AmountInput(
+            amountInputType = AmountInputType.SOURCE,
+            currency = state.sourceCurrency,
+            amount = state.sourceCurrencyAmount
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AmountInput(
+            amountInputType = AmountInputType.TARGET,
+            currency = state.sourceCurrency,
+            amount = state.targetCurrencyAmount
+        )
     }
 }

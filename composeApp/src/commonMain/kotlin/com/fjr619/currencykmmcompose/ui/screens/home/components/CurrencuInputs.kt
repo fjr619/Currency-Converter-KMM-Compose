@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
@@ -57,9 +58,11 @@ fun CurrencyInputs(
         IconButton(
             modifier = Modifier
                 .padding(top = 24.dp)
-                .graphicsLayer {
-                    rotationY = animatedRotation
-                },
+                .rotate(animatedRotation)
+//                .graphicsLayer {
+//                    rotationY = animatedRotation
+//                }
+                ,
             onClick = {
                 animationStarted = !animationStarted
                 onSwitch()

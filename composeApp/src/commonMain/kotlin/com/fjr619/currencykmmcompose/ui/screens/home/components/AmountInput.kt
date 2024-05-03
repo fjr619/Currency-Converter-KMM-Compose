@@ -20,6 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.fjr619.currencykmmcompose.domain.model.AmountInputType
 import com.fjr619.currencykmmcompose.domain.model.Currency
+import com.fjr619.currencykmmcompose.utils.DecimalFormat
+import com.fjr619.currencykmmcompose.utils.formatDecimalSeparator
 
 @Composable
 fun AmountInput(
@@ -35,7 +37,7 @@ fun AmountInput(
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(size = 8.dp))
                 .animateContentSize()
                 .height(54.dp),
-            value = amount,
+            value = if(amount.isNotEmpty()) DecimalFormat().format(amount.toDouble()).formatDecimalSeparator() else "0",
             readOnly = true,
             onValueChange = {},
             colors = TextFieldDefaults.colors(

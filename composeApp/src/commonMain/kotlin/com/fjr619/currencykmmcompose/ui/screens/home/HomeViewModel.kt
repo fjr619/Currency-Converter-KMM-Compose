@@ -185,8 +185,7 @@ class HomeViewModel(
         viewModelScope.launch {
             val source = state.value.sourceCurrency
             val target = state.value.targetCurrency
-            val sourceAmount = state.value.sourceCurrencyAmount
-            val targetAmount = state.value.targetCurrencyAmount
+
             source?.let {
                 saveTargetCurrencyCode(it.code)
             }
@@ -195,11 +194,6 @@ class HomeViewModel(
                 saveSourceCurrencyCode(it.code)
             }
 
-//            _state.update {
-//                it.copy(
-//                    sourceCurrencyAmount = targetAmount,
-//                )
-//            }
         }
     }
 
@@ -211,8 +205,8 @@ class HomeViewModel(
                 else ->
                     if (currentCurrencyValue == "0") value else {
                         (currentCurrencyValue + value).run {
-                            if (this.length > 12) {
-                                this.substring(0, 12)
+                            if (this.length > 9) {
+                                this.substring(0, 9)
                             } else {
                                 this
                             }

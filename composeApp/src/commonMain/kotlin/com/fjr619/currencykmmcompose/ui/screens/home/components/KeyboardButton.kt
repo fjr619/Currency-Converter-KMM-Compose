@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.dropUnlessResumed
 
 @Composable
 fun KeyboardButton(
@@ -27,7 +28,11 @@ fun KeyboardButton(
             .padding(8.dp)
             .clip(CircleShape)
             .background(color = backgroundColor)
-            .clickable { onClick(key) },
+            .clickable(
+                onClick = dropUnlessResumed {
+                    onClick(key)
+                }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Text(text = key, fontSize = 32.sp, color = Color.White)

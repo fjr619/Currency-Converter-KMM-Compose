@@ -3,9 +3,9 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.realm.plugin)
     alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.jetbrainsCompose)
 }
 
 kotlin {
@@ -52,7 +52,8 @@ kotlin {
 
             implementation(libs.lifecycle.viewmodel.compose)
             implementation(libs.lifecycle.runtime.compose)
-            implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha02")
+            implementation(libs.navigation.compose)
+//            implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha02")
 
         }
 

@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,7 +37,7 @@ fun HomeScreen() {
         var selectedCurrencyType: CurrencyType by remember {
             mutableStateOf(CurrencyType.None)
         }
-
+        
         if (dialogOpened && selectedCurrencyType != CurrencyType.None) {
             CurrencyPicker(
                 currencyPickerState = rememberCurrencyPickerState(
@@ -66,9 +65,10 @@ fun HomeScreen() {
         ) {
             HomeHeader(
                 state = state,
+                animatedResult = state.animatedResult,
+                consumeAnimatedResult = viewModel::consumeAnimatedResult,
                 onEvent = viewModel::onEvent,
                 onCurrencyTypeSelect = {
-                    println("currecnyType $it")
                     dialogOpened = true
                     selectedCurrencyType = it
                 }

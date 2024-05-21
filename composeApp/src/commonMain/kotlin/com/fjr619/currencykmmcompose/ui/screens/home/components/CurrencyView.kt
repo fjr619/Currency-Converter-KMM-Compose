@@ -2,6 +2,9 @@ package com.fjr619.currencykmmcompose.ui.screens.home.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +32,6 @@ import com.fjr619.currencykmmcompose.domain.model.Currency
 import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
 import com.fjr619.currencykmmcompose.utils.enterTrantition
 import com.fjr619.currencykmmcompose.utils.exitTransition
-import com.fjr619.currencykmmcompose.utils.transitionSpec
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -70,7 +72,13 @@ fun RowScope.CurrencyView(
                 currency?.let { data ->
                     AnimatedContent(
                         targetState = data,
-                        transitionSpec = { transitionSpec() },
+                        transitionSpec = {
+                            slideInHorizontally(
+                                initialOffsetX = { fullWidth -> fullWidth },
+                            ) togetherWith slideOutHorizontally(
+                                targetOffsetX = { fullWidth -> -fullWidth },
+                            )
+                        }
                     ) {
 
                         Row(

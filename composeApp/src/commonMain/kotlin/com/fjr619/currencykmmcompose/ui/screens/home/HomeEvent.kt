@@ -15,5 +15,4 @@ sealed class HomeEvent {
     data object ReadSourceCurrencyCode : HomeEvent()
     data object ReadTargetCurrencyCode : HomeEvent()
     data class NumberButtonClicked(val value: String): HomeEvent()
-
 }

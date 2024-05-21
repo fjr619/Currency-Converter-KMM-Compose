@@ -7,6 +7,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 
-fun enterTrantition() = scaleIn(tween(durationMillis = 400)) + fadeIn(tween(durationMillis = 800))
-fun exitTransition() = scaleOut(tween(durationMillis = 400)) + fadeOut(tween(durationMillis = 800))
+fun enterTrantition() = scaleIn(tween(durationMillis = 800))
+fun exitTransition() = scaleOut(tween(durationMillis = 800))
 fun transitionSpec() = enterTrantition() togetherWith exitTransition()

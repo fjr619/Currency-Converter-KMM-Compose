@@ -27,8 +27,10 @@ import com.fjr619.currencykmmcompose.ui.theme.headerColor
 fun HomeHeader(
     modifier: Modifier = Modifier,
     state: HomeUiState,
+    animatedResult : Boolean,
     onEvent: (HomeEvent) -> Unit,
-    onCurrencyTypeSelect: (CurrencyType) -> Unit
+    onCurrencyTypeSelect: (CurrencyType) -> Unit,
+    consumeAnimatedResult: () -> Unit
 ) {
     Column (
         modifier = modifier
@@ -54,15 +56,15 @@ fun HomeHeader(
 
         AmountInput(
             amountInputType = AmountInputType.SOURCE,
-            currency = state.sourceCurrency,
             amount = state.sourceCurrencyAmount
         )
         Spacer(modifier = Modifier.height(12.dp))
 
         AmountInput(
             amountInputType = AmountInputType.TARGET,
-            currency = state.sourceCurrency,
-            amount = state.targetCurrencyAmount
+            amount = state.targetCurrencyAmount,
+            animatedResult = animatedResult,
+            consumeAnimatedResult = consumeAnimatedResult
         )
     }
 }

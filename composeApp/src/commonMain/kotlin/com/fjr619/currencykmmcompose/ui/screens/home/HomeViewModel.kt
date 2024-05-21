@@ -6,6 +6,7 @@ import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
 import com.fjr619.currencykmmcompose.domain.model.CurrencyType
 import com.fjr619.currencykmmcompose.domain.model.RateStatus
 import com.fjr619.currencykmmcompose.domain.repository.CurrencyRepository
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -133,9 +135,22 @@ class HomeViewModel(
         }
     }
 
+    fun consumeAnimatedResult() {
+        updateAnimatedResult(false)
+    }
+
+    private fun updateAnimatedResult(boolean: Boolean) {
+        _state.update {
+            it.copy(
+                animatedResult = boolean
+            )
+        }
+    }
+
     private fun saveSourceCurrencyCode(code: String) {
         viewModelScope.launch {
             currencyRepository.saveSourceCurrencyCode(code)
+            updateAnimatedResult(true)
         }
     }
 
@@ -160,6 +175,7 @@ class HomeViewModel(
     private fun saveTargetCurrencyCode(code: String) {
         viewModelScope.launch {
             currencyRepository.saveTargetCurrencyCode(code)
+            updateAnimatedResult(true)
         }
     }
 

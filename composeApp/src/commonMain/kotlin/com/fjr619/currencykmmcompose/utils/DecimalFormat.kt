@@ -6,7 +6,6 @@ expect class DecimalFormat() {
 
 fun String.formatDecimalSeparator(): String {
     val split = this.split(".")
-    println("string $this $split")
     var result = ""
     if (split.isEmpty() || split.size < 2) {
         result = this.reversed()

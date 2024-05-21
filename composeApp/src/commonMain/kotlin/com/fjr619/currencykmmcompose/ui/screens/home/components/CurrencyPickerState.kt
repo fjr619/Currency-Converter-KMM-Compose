@@ -1,7 +1,5 @@
 package com.fjr619.currencykmmcompose.ui.screens.home.components
 
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -58,11 +56,9 @@ data class CurrencyPickerState internal constructor(
     var selectedCurrencyCode by mutableStateOf(currencyType.code)
         private set
 
-    var searchSize by mutableStateOf(IntSize.Zero)
-        private set
+    private var searchSize by mutableStateOf(IntSize.Zero)
 
-    var buttonContainerSize by mutableStateOf(IntSize.Zero)
-        private set
+    private var buttonContainerSize by mutableStateOf(IntSize.Zero)
 
     fun clearAndAddCurrencies(newCurrencies: List<Currency>) {
         allCurrencies.clear()
@@ -71,11 +67,11 @@ data class CurrencyPickerState internal constructor(
 
     fun getAllCurrencies() = allCurrencies
 
-    fun updateSearchQuety(query: String) {
+    fun updateSearchQuery(query: String) {
         searchQuery = query
     }
 
-    fun updateSelectedCurrnecyCode(new: CurrencyCode) {
+    fun updateSelectedCurrencyCode(new: CurrencyCode) {
         selectedCurrencyCode = new
     }
 

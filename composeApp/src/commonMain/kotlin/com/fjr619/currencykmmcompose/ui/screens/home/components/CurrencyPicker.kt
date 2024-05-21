@@ -113,7 +113,7 @@ fun BoxScope.CurrencyCodePickerItemContainer() {
             CurrencyCodePickerView(
                 code = CurrencyCode.valueOf(currency.code),
                 isSelected = currencyPickerState.selectedCurrencyCode.name == currency.code,
-                onSelect = { currencyPickerState.updateSelectedCurrnecyCode(it) }
+                onSelect = { currencyPickerState.updateSelectedCurrencyCode(it) }
             )
         }
     }
@@ -190,7 +190,7 @@ fun BoxScope.SearchBar() {
             },
         value = currencyPickerState.searchQuery,
         onValueChange = { query ->
-            currencyPickerState.updateSearchQuety(query.uppercase())
+            currencyPickerState.updateSearchQuery(query.uppercase())
             if (currencyPickerState.searchQuery.isNotEmpty()) {
                 val filteredCurrencies = currencyPickerState.currencyList.filter {
                     it.code.contains(
@@ -203,7 +203,7 @@ fun BoxScope.SearchBar() {
                 }
 
                 if (filteredCurrencies.size == 1) {
-                    currencyPickerState.updateSelectedCurrnecyCode(
+                    currencyPickerState.updateSelectedCurrencyCode(
                         CurrencyCode.valueOf(filteredCurrencies[0].code)
                     )
                 }

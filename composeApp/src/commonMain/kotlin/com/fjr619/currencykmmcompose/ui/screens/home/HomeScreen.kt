@@ -4,12 +4,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +27,7 @@ import com.fjr619.currencykmmcompose.ui.screens.home.components.KeyboardButton
 import com.fjr619.currencykmmcompose.ui.theme.headerColor
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
     Surface(
@@ -44,8 +44,12 @@ fun HomeScreen() {
             CurrencyPicker(
                 currencyList = state.currencyRates,
                 currencyType = selectedCurrencyType,
-                onEvent = {
-                    viewModel.onEvent(it)
+                onSelect = {
+                    viewModel.onEvent(
+                        HomeEvent.SaveSelectedCurrencyCode(
+                            selectedCurrencyType, it
+                        )
+                    )
                     dialogOpened = false
                     selectedCurrencyType = CurrencyType.None
                 },
@@ -70,7 +74,7 @@ fun HomeScreen() {
             )
 
             val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "C")
-            LazyVerticalGrid (
+            LazyVerticalGrid(
                 modifier = Modifier.fillMaxSize(),
                 columns = GridCells.Fixed(3),
                 verticalArrangement = Arrangement.Center

@@ -7,36 +7,42 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,15 +51,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.fjr619.currencykmmcompose.domain.model.Currency
 import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
 import com.fjr619.currencykmmcompose.domain.model.CurrencyType
-import com.fjr619.currencykmmcompose.ui.screens.home.HomeEvent
 import com.fjr619.currencykmmcompose.ui.theme.surfaceColor
 import com.fjr619.currencykmmcompose.ui.theme.textColor
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 class OffsetWrapper(var offset: Float = 0f)
@@ -63,7 +75,7 @@ class OffsetWrapper(var offset: Float = 0f)
 fun CurrencyPicker(
     currencyList: List<Currency>,
     currencyType: CurrencyType,
-    onEvent: (HomeEvent) -> Unit,
+    onSelect: (CurrencyCode) -> Unit,
     onDismiss: () -> Unit
 ) {
 
@@ -76,114 +88,161 @@ fun CurrencyPicker(
         mutableStateOf(currencyType.code)
     }
 
-    BasicAlertDialog(
-        onDismissRequest = {
-            onDismiss()
-        },
-        content = {
-            Column(
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+    val coroutineScope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    var buttonSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+
+    var searchSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+
+
+    val scrollState = rememberLazyListState(
+        initialFirstVisibleItemIndex = currencyList.indexOf(currencyList.find { it.code == selectedCurrencyCode.name })
+
+    )
+
+    ModalBottomSheet(
+        modifier = Modifier.fillMaxSize(),
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        // Sheet content
+        Box(
+            modifier = Modifier.fillMaxHeight(),
+            contentAlignment = Alignment.BottomEnd
+        ) {
+
+            LazyColumn(
+                state = scrollState,
                 modifier = Modifier
-                    .fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(surfaceColor)
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                TextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(size = 16.dp)),
-                    value = searchQuery,
-                    onValueChange = { query ->
-                        searchQuery = query.uppercase()
-
-                        if (query.isNotEmpty()) {
-                            val filteredCurrencies = currencyList.filter {
-                                it.code.contains(query.uppercase())
-                            }
-                            allCurrencies.clear()
-                            allCurrencies.addAll(filteredCurrencies)
-                        } else {
-                            allCurrencies.clear()
-                            allCurrencies.addAll(currencyList)
-                        }
-                    },
-                    placeholder = {
-                        Text(
-                            text = "Search here",
-                            color = textColor.copy(alpha = 0.38f),
-                            fontSize = MaterialTheme.typography.bodySmall.fontSize
-                        )
-                    },
-                    singleLine = true,
-                    textStyle = TextStyle(
-                        color = textColor,
-                        fontSize = MaterialTheme.typography.bodySmall.fontSize
-                    ),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = textColor.copy(alpha = 0.1f),
-                        unfocusedContainerColor = textColor.copy(alpha = 0.1f),
-                        disabledContainerColor = textColor.copy(alpha = 0.1f),
-                        errorContainerColor = textColor.copy(alpha = 0.1f),
-                        focusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = textColor,
+                    .padding(
+                        top = with(density) { (searchSize.height * 2).toDp() + 5.dp },
+                        bottom = 16.dp
                     )
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                if (allCurrencies.isNotEmpty()) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(
-                            items = allCurrencies,
-                            key = { it.code }
-                        ) { currency ->
-                            CurrencyCodePickerView(
-                                code = CurrencyCode.valueOf(currency.code),
-                                isSelected = selectedCurrencyCode.name == currency.code,
-                                onSelect = { selectedCurrencyCode = it }
-                            )
-                        }
-                    }
-                } else {
-                    //TODO
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = {
-                        onDismiss()
-                    }) {
-                        Text(
-                            text = "Cancel",
-                            color = MaterialTheme.colorScheme.outline
+                    .padding(horizontal = 16.dp)
+                    .align(Alignment.TopCenter)
+                    .offset {
+                        IntOffset(
+                            x = 0,
+                            y = -buttonSize.height
                         )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    TextButton(onClick = {
-                        onEvent(
-                            HomeEvent.SaveSelectedCurrencyCode(
-                                currencyType,
-                                selectedCurrencyCode
-                            )
-                        )
-                    }) {
-                        Text(
-                            text = "Confirm",
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    },
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(
+                    items = allCurrencies,
+                    key = { it.code }
+                ) { currency ->
+                    CurrencyCodePickerView(
+                        code = CurrencyCode.valueOf(currency.code),
+                        isSelected = selectedCurrencyCode.name == currency.code,
+                        onSelect = { selectedCurrencyCode = it }
+                    )
                 }
             }
+
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(size = 16.dp))
+                    .onGloballyPositioned {
+                        searchSize = it.size
+                    },
+                value = searchQuery,
+                onValueChange = { query ->
+                    searchQuery = query.uppercase()
+                    if (searchQuery.isNotEmpty()) {
+                        val filteredCurrencies = currencyList.filter {
+                            it.code.contains(
+                                searchQuery,
+                                true
+                            ) or CurrencyCode.valueOf(it.code).country.contains(searchQuery, true)
+                        }
+
+                        if (filteredCurrencies.size == 1) {
+                            selectedCurrencyCode = CurrencyCode.valueOf(filteredCurrencies[0].code)
+                        }
+
+                        allCurrencies.clear()
+                        allCurrencies.addAll(filteredCurrencies)
+                    } else {
+                        allCurrencies.clear()
+                        allCurrencies.addAll(currencyList)
+                    }
+                },
+                placeholder = {
+                    Text(
+                        text = "Search here",
+                        color = textColor.copy(alpha = 0.38f),
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize
+                    )
+                },
+                singleLine = true,
+                textStyle = TextStyle(
+                    color = textColor,
+                    fontSize = MaterialTheme.typography.bodySmall.fontSize
+                ),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = textColor.copy(alpha = 0.1f),
+                    unfocusedContainerColor = textColor.copy(alpha = 0.1f),
+                    disabledContainerColor = textColor.copy(alpha = 0.1f),
+                    errorContainerColor = textColor.copy(alpha = 0.1f),
+                    focusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = textColor,
+                )
+            )
+
+
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .height(50.dp)
+                    .offset {
+                        IntOffset(
+                            x = 0,
+                            y = -sheetState.requireOffset().toInt()
+                        )
+                    }.onSizeChanged {
+                        buttonSize = it
+                    },
+            ) {
+                TextButton(
+                    modifier = Modifier.fillMaxWidth().fillMaxHeight().weight(1f),
+                    shape = RectangleShape,
+                    onClick = {
+                        coroutineScope.launch {
+                            sheetState.hide()
+                            onDismiss()
+                        }
+                    }) {
+                    Text(text = "Cancel", color = MaterialTheme.colorScheme.outline)
+                }
+
+                TextButton(
+                    modifier = Modifier.fillMaxWidth().fillMaxHeight().weight(1f),
+                    shape = RectangleShape,
+                    onClick = {
+                        coroutineScope.launch {
+                            sheetState.hide()
+                            onSelect(selectedCurrencyCode)
+                        }
+                    }) {
+                    Text(text = "Select", color = MaterialTheme.colorScheme.primary)
+                }
+            }
+
         }
-    )
+    }
 }
 
 @Composable
@@ -214,6 +273,13 @@ fun CurrencyCodePickerView(
             .fillMaxWidth()
             .clip(RoundedCornerShape(size = 8.dp))
             .clickable { onSelect(code) }
+            .then(
+                if (isSelected) {
+                    Modifier.background(Color.LightGray.copy(alpha = if (isSystemInDarkTheme()) 0.2f else 0.3f))
+                } else {
+                    Modifier
+                }
+            )
             .padding(all = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -228,35 +294,35 @@ fun CurrencyCodePickerView(
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 modifier = Modifier.alpha(animatedAlpha),
-                text = code.name,
+                text = "${code.name} (${code.country})",
                 fontWeight = FontWeight.Bold,
                 color = textColor
             )
         }
-        CurrencyCodeSelector(isSelected = isSelected)
+//        CurrencyCodeSelector(isSelected = isSelected)
     }
 }
 
-@Composable
-private fun CurrencyCodeSelector(isSelected: Boolean = false) {
-    val animatedColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else textColor.copy(alpha = 0.1f),
-        animationSpec = tween(durationMillis = 300)
-    )
-    Box(
-        modifier = Modifier
-            .size(18.dp)
-            .clip(CircleShape)
-            .background(animatedColor),
-        contentAlignment = Alignment.Center
-    ) {
-        if (isSelected) {
-            Icon(
-                modifier = Modifier.size(12.dp),
-                imageVector = Icons.Default.Check,
-                contentDescription = "Checkmark icon",
-                tint = surfaceColor
-            )
-        }
-    }
-}
+//@Composable
+//private fun CurrencyCodeSelector(isSelected: Boolean = false) {
+//    val animatedColor by animateColorAsState(
+//        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else textColor.copy(alpha = 0.1f),
+//        animationSpec = tween(durationMillis = 300)
+//    )
+//    Box(
+//        modifier = Modifier
+//            .size(18.dp)
+//            .clip(CircleShape)
+//            .background(animatedColor),
+//        contentAlignment = Alignment.Center
+//    ) {
+//        if (isSelected) {
+//            Icon(
+//                modifier = Modifier.size(12.dp),
+//                imageVector = Icons.Default.Check,
+//                contentDescription = "Checkmark icon",
+//                tint = surfaceColor
+//            )
+//        }
+//    }
+//}

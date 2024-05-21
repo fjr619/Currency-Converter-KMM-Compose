@@ -72,6 +72,7 @@ class CurrencyRepositoryImpl(
                 .filter { currency -> avaiableCurrencyCodes.contains(currency.code) }
 
 
+
             //update database
             if (avaiableCurrencies.isNotEmpty()) {
                 println("FETCHING NETWORK AND SAVE DATABASE")
@@ -88,8 +89,9 @@ class CurrencyRepositoryImpl(
                 Clock.System.now().toEpochMilliseconds()
             )
             return Result.success(value = avaiableCurrencies.map { it.toDomain() })
-
         } catch (e: RequestException) {
+            return Result.failure(e)
+        } catch (e: Exception) {
             return Result.failure(e)
         }
     }
@@ -126,7 +128,6 @@ class CurrencyRepositoryImpl(
 
             var currentDateTime: LocalDateTime
             val savedInstant = Instant.fromEpochMilliseconds(savedTimestamp)
-            val savedDateTime = savedInstant.toLocalDateTime(TimeZone.currentSystemDefault())
 
             val result = tickerFlow(1.seconds).map {
                 currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
@@ -136,11 +137,7 @@ class CurrencyRepositoryImpl(
                     TimeZone.currentSystemDefault()
                 )
 
-//                println("currentDateTime $currentDateTime")
-//                println("savedDateTime $savedDateTime")
-//                println("difference ${difference}")
-
-                difference < 1L
+                difference < 1
             }
 
             return result
@@ -202,64 +199,4 @@ class CurrencyRepositoryImpl(
                 CurrencyCode.valueOf(code)
             }
     }
-
-//    override suspend fun getLatestExchangeRates(): Result<List<Currency>> {
-//        try {
-//            val response = remoteDataSource.getLatest()
-//
-//            val avaiableCurrencyCodes = response.data.keys
-//                .filter {
-//                    CurrencyCode.entries.map { code ->
-//                        code.name
-//                    }.toSet().contains(it)
-//                }
-//
-//            val avaiableCurrencies = response.data.values
-//                .filter { currency -> avaiableCurrencyCodes.contains(currency.code) }
-//                .map {
-//                    it.toDomain()
-//                }
-//
-//            //persist a timestamp
-//            val lastUpdate = response.meta.lastUpdatedAt
-//            preferencesDataSource.putPreference(Constant.KEY_TIMESTAMP, Instant.parse(lastUpdate).toEpochMilliseconds())
-//            return Result.success(value = avaiableCurrencies)
-//
-//        } catch (e: RequestException) {
-//            return Result.failure(e)
-//        }
-//    }
-//
-//    override suspend fun isDataFresh(): Boolean {
-//        val savedTimestamp = preferencesDataSource.getPreference(
-//            key = Constant.KEY_TIMESTAMP,
-//            defaultValue = 0L
-//        ).first()
-//
-//        return if (savedTimestamp != 0L) {
-//            val currentInstant = Clock.System.now()
-//            val savedInstant = Instant.fromEpochMilliseconds(savedTimestamp)
-//
-//            val currentDateTime = currentInstant.toLocalDateTime(TimeZone.currentSystemDefault())
-//            val savedDateTime = savedInstant.toLocalDateTime(TimeZone.currentSystemDefault())
-//
-//            val daysDifference = currentDateTime.date.dayOfYear - savedDateTime.date.dayOfYear
-//
-//            daysDifference < 1
-//        } else false
-//    }
-//
-
-//
-//    override fun readCurrencyData(): Flow<Result<List<Currency>>> {
-//        return localDataSource.readCurrencyData().map { list ->
-//            Result.success(list.map { it.toDomain() })
-//        }
-//    }
-//
-//    override suspend fun cleanUp() {
-//        localDataSource.cleanUp()
-//    }
-
-
 }

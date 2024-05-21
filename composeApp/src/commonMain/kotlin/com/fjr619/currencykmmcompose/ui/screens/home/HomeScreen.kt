@@ -23,6 +23,7 @@ import com.fjr619.currencykmmcompose.ui.koinViewModel
 import com.fjr619.currencykmmcompose.ui.screens.home.components.CurrencyPicker
 import com.fjr619.currencykmmcompose.ui.screens.home.components.HomeHeader
 import com.fjr619.currencykmmcompose.ui.screens.home.components.KeyboardButton
+import com.fjr619.currencykmmcompose.ui.screens.home.components.keys
 import com.fjr619.currencykmmcompose.ui.screens.home.components.rememberCurrencyPickerState
 import com.fjr619.currencykmmcompose.ui.theme.headerColor
 
@@ -37,7 +38,7 @@ fun HomeScreen() {
         var selectedCurrencyType: CurrencyType by remember {
             mutableStateOf(CurrencyType.None)
         }
-        
+
         if (dialogOpened && selectedCurrencyType != CurrencyType.None) {
             CurrencyPicker(
                 currencyPickerState = rememberCurrencyPickerState(
@@ -74,7 +75,6 @@ fun HomeScreen() {
                 }
             )
 
-            val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "C", backKey)
             LazyVerticalGrid(
                 modifier = Modifier.fillMaxSize(),
                 columns = GridCells.Fixed(3),
@@ -83,7 +83,8 @@ fun HomeScreen() {
                 items(keys,
                     span = {
                         GridItemSpan(1)
-                    }
+                    },
+                    key = { it }
                 ) { key ->
                     KeyboardButton(
                         modifier = Modifier.height(100.dp),

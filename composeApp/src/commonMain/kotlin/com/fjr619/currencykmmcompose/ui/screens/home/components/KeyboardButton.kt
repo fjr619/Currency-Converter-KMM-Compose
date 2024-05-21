@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.fjr619.currencykmmcompose.ui.screens.home.backKey
 
+val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "C", backKey)
+
 @Composable
 fun KeyboardButton(
     modifier: Modifier = Modifier,
@@ -30,7 +32,6 @@ fun KeyboardButton(
 ) {
     Box(
         modifier = modifier
-
             .padding(8.dp)
             .clip(CircleShape)
             .background(color = backgroundColor)
@@ -47,7 +48,8 @@ fun KeyboardButton(
             Icon(
                 modifier = Modifier.size(32.dp).rotate(270f),
                 imageVector = Icons.Filled.KeyboardArrowUp,
-                contentDescription = ""
+                contentDescription = "",
+                tint = Color.White
             )
         }
 

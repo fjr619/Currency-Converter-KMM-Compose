@@ -37,7 +37,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -48,13 +47,11 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
 import com.fjr619.currencykmmcompose.ui.theme.textColor
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 val LocalCurrencyPickerState = compositionLocalOf<CurrencyPickerState> { error("ERROR") }
@@ -241,15 +238,12 @@ fun BoxScope.SearchBar() {
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ButtonContainer(
     onSelect: (CurrencyCode) -> Unit,
     onDismiss: () -> Unit
 ) {
     val currencyPickerState: CurrencyPickerState = LocalCurrencyPickerState.current
-    val focusManager = LocalFocusManager.current
-    val coroutineScope = rememberCoroutineScope()
 
     Row(
         modifier = Modifier.fillMaxWidth()
@@ -263,11 +257,7 @@ fun ButtonContainer(
             modifier = Modifier.fillMaxWidth().fillMaxHeight().weight(1f),
             shape = RectangleShape,
             onClick = {
-                coroutineScope.launch {
-                    focusManager.clearFocus(true)
-                    currencyPickerState.sheetState.hide()
-                    onDismiss()
-                }
+                onDismiss()
             }) {
             Text(text = "Cancel", color = MaterialTheme.colorScheme.outline)
         }
@@ -276,11 +266,7 @@ fun ButtonContainer(
             modifier = Modifier.fillMaxWidth().fillMaxHeight().weight(1f),
             shape = RectangleShape,
             onClick = {
-                coroutineScope.launch {
-                    focusManager.clearFocus(true)
-                    currencyPickerState.sheetState.hide()
-                    onSelect(currencyPickerState.selectedCurrencyCode)
-                }
+                onSelect(currencyPickerState.selectedCurrencyCode)
             }) {
             Text(text = "Select", color = MaterialTheme.colorScheme.primary)
         }

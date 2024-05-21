@@ -20,21 +20,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fjr619.currencykmmcompose.domain.model.CurrencyType
-import com.fjr619.currencykmmcompose.ui.ViewModelFac
+import com.fjr619.currencykmmcompose.ui.koinViewModel
 import com.fjr619.currencykmmcompose.ui.screens.home.components.CurrencyPicker
 import com.fjr619.currencykmmcompose.ui.screens.home.components.HomeHeader
 import com.fjr619.currencykmmcompose.ui.screens.home.components.KeyboardButton
 import com.fjr619.currencykmmcompose.ui.screens.home.components.rememberCurrencyPickerState
 import com.fjr619.currencykmmcompose.ui.theme.headerColor
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
-        val viewModel = ViewModelFac.getHomeViewModel()
+        val viewModel = koinViewModel<HomeViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         var dialogOpened by rememberSaveable { mutableStateOf(false) }
         var selectedCurrencyType: CurrencyType by remember {

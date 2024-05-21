@@ -243,7 +243,7 @@ fun BoxScope.SearchBar() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BoxScope.ButtonContainer(
+fun ButtonContainer(
     onSelect: (CurrencyCode) -> Unit,
     onDismiss: () -> Unit
 ) {

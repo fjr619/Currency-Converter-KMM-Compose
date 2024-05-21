@@ -202,17 +202,28 @@ class HomeViewModel(
         _updatedCurrencyValue.update {
             when (value) {
                 "C" -> "0"
-                else ->
-                    if (currentCurrencyValue == "0") value else {
-                        (currentCurrencyValue + value).run {
-                            if (this.length > 9) {
-                                this.substring(0, 9)
-                            } else {
-                                this
+                else -> {
+                    if (value != backKey) {
+                        if (currentCurrencyValue == "0") value else {
+                            (currentCurrencyValue + value).run {
+                                if (this.length > 9) {
+                                    this.substring(0, 9)
+                                } else {
+                                    this
+                                }
                             }
+                        }
+                    } else {
+                        if (currentCurrencyValue.length >= 0) {
+                            currentCurrencyValue.dropLast(1)
+                        } else {
+                            "0"
                         }
 
                     }
+
+                }
+
             }
         }
     }

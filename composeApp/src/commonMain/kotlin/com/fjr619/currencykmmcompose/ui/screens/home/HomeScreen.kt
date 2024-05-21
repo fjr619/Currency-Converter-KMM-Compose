@@ -74,16 +74,15 @@ fun HomeScreen() {
                 }
             )
 
-            val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "C")
+            val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "C", backKey)
             LazyVerticalGrid(
                 modifier = Modifier.fillMaxSize(),
                 columns = GridCells.Fixed(3),
                 verticalArrangement = Arrangement.Center
             ) {
                 items(keys,
-                    span = { key ->
-                        val spanCount = if (key == "C") 2 else 1
-                        GridItemSpan(spanCount)
+                    span = {
+                        GridItemSpan(1)
                     }
                 ) { key ->
                     KeyboardButton(
@@ -98,7 +97,7 @@ fun HomeScreen() {
                 }
             }
         }
-
-
     }
 }
+
+const val backKey = "<-"

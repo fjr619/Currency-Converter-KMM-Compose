@@ -24,6 +24,7 @@ import com.fjr619.currencykmmcompose.ui.ViewModelFac
 import com.fjr619.currencykmmcompose.ui.screens.home.components.CurrencyPicker
 import com.fjr619.currencykmmcompose.ui.screens.home.components.HomeHeader
 import com.fjr619.currencykmmcompose.ui.screens.home.components.KeyboardButton
+import com.fjr619.currencykmmcompose.ui.screens.home.components.rememberCurrencyPickerState
 import com.fjr619.currencykmmcompose.ui.theme.headerColor
 
 
@@ -42,8 +43,10 @@ fun HomeScreen() {
 
         if (dialogOpened && selectedCurrencyType != CurrencyType.None) {
             CurrencyPicker(
-                currencyList = state.currencyRates,
-                currencyType = selectedCurrencyType,
+                currencyPickerState = rememberCurrencyPickerState(
+                    currencyType = selectedCurrencyType,
+                    currencyList = state.currencyRates
+                ),
                 onSelect = {
                     viewModel.onEvent(
                         HomeEvent.SaveSelectedCurrencyCode(

@@ -1,6 +1,5 @@
 package com.fjr619.currencykmmcompose.ui.screens.home.components
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -10,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -23,27 +23,21 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -54,63 +48,28 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.fjr619.currencykmmcompose.domain.model.Currency
 import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
-import com.fjr619.currencykmmcompose.domain.model.CurrencyType
-import com.fjr619.currencykmmcompose.ui.theme.surfaceColor
 import com.fjr619.currencykmmcompose.ui.theme.textColor
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
-class OffsetWrapper(var offset: Float = 0f)
+val LocalCurrencyPickerState = compositionLocalOf<CurrencyPickerState> { error("ERROR") }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurrencyPicker(
-    currencyList: List<Currency>,
-    currencyType: CurrencyType,
+    currencyPickerState: CurrencyPickerState,
     onSelect: (CurrencyCode) -> Unit,
     onDismiss: () -> Unit
 ) {
-
-    val allCurrencies = remember(key1 = currencyList) {
-        mutableStateListOf<Currency>().apply { addAll(currencyList) }
-    }
-
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedCurrencyCode by remember(currencyType) {
-        mutableStateOf(currencyType.code)
-    }
-
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
-    val coroutineScope = rememberCoroutineScope()
-    val density = LocalDensity.current
-    var buttonSize by remember {
-        mutableStateOf(IntSize.Zero)
-    }
-
-    var searchSize by remember {
-        mutableStateOf(IntSize.Zero)
-    }
-
-
-    val scrollState = rememberLazyListState(
-        initialFirstVisibleItemIndex = currencyList.indexOf(currencyList.find { it.code == selectedCurrencyCode.name })
-
-    )
-
     ModalBottomSheet(
         modifier = Modifier.fillMaxSize(),
         onDismissRequest = onDismiss,
-        sheetState = sheetState
+        sheetState = currencyPickerState.sheetState
     ) {
         // Sheet content
         Box(
@@ -118,129 +77,47 @@ fun CurrencyPicker(
             contentAlignment = Alignment.BottomEnd
         ) {
 
-            LazyColumn(
-                state = scrollState,
-                modifier = Modifier
-                    .padding(
-                        top = with(density) { (searchSize.height * 2).toDp() + 5.dp },
-                        bottom = 16.dp
-                    )
-                    .padding(horizontal = 16.dp)
-                    .align(Alignment.TopCenter)
-                    .offset {
-                        IntOffset(
-                            x = 0,
-                            y = -buttonSize.height
-                        )
-                    },
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(
-                    items = allCurrencies,
-                    key = { it.code }
-                ) { currency ->
-                    CurrencyCodePickerView(
-                        code = CurrencyCode.valueOf(currency.code),
-                        isSelected = selectedCurrencyCode.name == currency.code,
-                        onSelect = { selectedCurrencyCode = it }
-                    )
-                }
-            }
-
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopCenter)
-                    .padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(size = 16.dp))
-                    .onGloballyPositioned {
-                        searchSize = it.size
-                    },
-                value = searchQuery,
-                onValueChange = { query ->
-                    searchQuery = query.uppercase()
-                    if (searchQuery.isNotEmpty()) {
-                        val filteredCurrencies = currencyList.filter {
-                            it.code.contains(
-                                searchQuery,
-                                true
-                            ) or CurrencyCode.valueOf(it.code).country.contains(searchQuery, true)
-                        }
-
-                        if (filteredCurrencies.size == 1) {
-                            selectedCurrencyCode = CurrencyCode.valueOf(filteredCurrencies[0].code)
-                        }
-
-                        allCurrencies.clear()
-                        allCurrencies.addAll(filteredCurrencies)
-                    } else {
-                        allCurrencies.clear()
-                        allCurrencies.addAll(currencyList)
-                    }
-                },
-                placeholder = {
-                    Text(
-                        text = "Search here",
-                        color = textColor.copy(alpha = 0.38f),
-                        fontSize = MaterialTheme.typography.bodySmall.fontSize
-                    )
-                },
-                singleLine = true,
-                textStyle = TextStyle(
-                    color = textColor,
-                    fontSize = MaterialTheme.typography.bodySmall.fontSize
-                ),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = textColor.copy(alpha = 0.1f),
-                    unfocusedContainerColor = textColor.copy(alpha = 0.1f),
-                    disabledContainerColor = textColor.copy(alpha = 0.1f),
-                    errorContainerColor = textColor.copy(alpha = 0.1f),
-                    focusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor = textColor,
+            CompositionLocalProvider(LocalCurrencyPickerState provides currencyPickerState) {
+                CurrencyCodePickerItemContainer()
+                SearchBar()
+                ButtonContainer(
+                    onSelect = onSelect,
+                    onDismiss = onDismiss
                 )
-            )
-
-
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .height(50.dp)
-                    .offset {
-                        IntOffset(
-                            x = 0,
-                            y = -sheetState.requireOffset().toInt()
-                        )
-                    }.onSizeChanged {
-                        buttonSize = it
-                    },
-            ) {
-                TextButton(
-                    modifier = Modifier.fillMaxWidth().fillMaxHeight().weight(1f),
-                    shape = RectangleShape,
-                    onClick = {
-                        coroutineScope.launch {
-                            sheetState.hide()
-                            onDismiss()
-                        }
-                    }) {
-                    Text(text = "Cancel", color = MaterialTheme.colorScheme.outline)
-                }
-
-                TextButton(
-                    modifier = Modifier.fillMaxWidth().fillMaxHeight().weight(1f),
-                    shape = RectangleShape,
-                    onClick = {
-                        coroutineScope.launch {
-                            sheetState.hide()
-                            onSelect(selectedCurrencyCode)
-                        }
-                    }) {
-                    Text(text = "Select", color = MaterialTheme.colorScheme.primary)
-                }
             }
+        }
+    }
+}
 
+@Composable
+fun BoxScope.CurrencyCodePickerItemContainer() {
+    val currencyPickerState: CurrencyPickerState = LocalCurrencyPickerState.current
+    val scrollState = rememberLazyListState(
+        initialFirstVisibleItemIndex =
+        currencyPickerState.currencyList.indexOf(currencyPickerState.currencyList.find { it.code == currencyPickerState.selectedCurrencyCode.name })
+    )
+
+    LazyColumn(
+        state = scrollState,
+        modifier = Modifier
+            .padding(
+                top = currencyPickerState.paddingTopItemsContainer(),
+                bottom = 16.dp
+            )
+            .padding(horizontal = 16.dp)
+            .align(Alignment.TopCenter)
+            .offset { currencyPickerState.offsetItemsContainer() },
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(
+            items = currencyPickerState.getAllCurrencies(),
+            key = { it.code }
+        ) { currency ->
+            CurrencyCodePickerView(
+                code = CurrencyCode.valueOf(currency.code),
+                isSelected = currencyPickerState.selectedCurrencyCode.name == currency.code,
+                onSelect = { currencyPickerState.updateSelectedCurrnecyCode(it) }
+            )
         }
     }
 }
@@ -299,30 +176,113 @@ fun CurrencyCodePickerView(
                 color = textColor
             )
         }
-//        CurrencyCodeSelector(isSelected = isSelected)
     }
 }
 
-//@Composable
-//private fun CurrencyCodeSelector(isSelected: Boolean = false) {
-//    val animatedColor by animateColorAsState(
-//        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else textColor.copy(alpha = 0.1f),
-//        animationSpec = tween(durationMillis = 300)
-//    )
-//    Box(
-//        modifier = Modifier
-//            .size(18.dp)
-//            .clip(CircleShape)
-//            .background(animatedColor),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        if (isSelected) {
-//            Icon(
-//                modifier = Modifier.size(12.dp),
-//                imageVector = Icons.Default.Check,
-//                contentDescription = "Checkmark icon",
-//                tint = surfaceColor
-//            )
-//        }
-//    }
-//}
+@Composable
+fun BoxScope.SearchBar() {
+    val currencyPickerState: CurrencyPickerState = LocalCurrencyPickerState.current
+    TextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .align(Alignment.TopCenter)
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(size = 16.dp))
+            .onGloballyPositioned {
+                currencyPickerState.updateSearchSize(it.size)
+            },
+        value = currencyPickerState.searchQuery,
+        onValueChange = { query ->
+            currencyPickerState.updateSearchQuety(query.uppercase())
+            if (currencyPickerState.searchQuery.isNotEmpty()) {
+                val filteredCurrencies = currencyPickerState.currencyList.filter {
+                    it.code.contains(
+                        currencyPickerState.searchQuery,
+                        true
+                    ) or CurrencyCode.valueOf(it.code).country.contains(
+                        currencyPickerState.searchQuery,
+                        true
+                    )
+                }
+
+                if (filteredCurrencies.size == 1) {
+                    currencyPickerState.updateSelectedCurrnecyCode(
+                        CurrencyCode.valueOf(filteredCurrencies[0].code)
+                    )
+                }
+
+                currencyPickerState.clearAndAddCurrencies(filteredCurrencies)
+            } else {
+                currencyPickerState.clearAndAddCurrencies(currencyPickerState.currencyList)
+            }
+        },
+        placeholder = {
+            Text(
+                text = "Search here",
+                color = textColor.copy(alpha = 0.38f),
+                fontSize = MaterialTheme.typography.bodySmall.fontSize
+            )
+        },
+        singleLine = true,
+        textStyle = TextStyle(
+            color = textColor,
+            fontSize = MaterialTheme.typography.bodySmall.fontSize
+        ),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = textColor.copy(alpha = 0.1f),
+            unfocusedContainerColor = textColor.copy(alpha = 0.1f),
+            disabledContainerColor = textColor.copy(alpha = 0.1f),
+            errorContainerColor = textColor.copy(alpha = 0.1f),
+            focusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            cursorColor = textColor,
+        )
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BoxScope.ButtonContainer(
+    onSelect: (CurrencyCode) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val currencyPickerState: CurrencyPickerState = LocalCurrencyPickerState.current
+    val focusManager = LocalFocusManager.current
+    val coroutineScope = rememberCoroutineScope()
+
+    Row(
+        modifier = Modifier.fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .height(50.dp)
+            .offset { currencyPickerState.offsetButtonsContainer() }.onSizeChanged {
+                currencyPickerState.updateButtonContainerSize(it)
+            },
+    ) {
+        TextButton(
+            modifier = Modifier.fillMaxWidth().fillMaxHeight().weight(1f),
+            shape = RectangleShape,
+            onClick = {
+                coroutineScope.launch {
+                    focusManager.clearFocus(true)
+                    currencyPickerState.sheetState.hide()
+                    onDismiss()
+                }
+            }) {
+            Text(text = "Cancel", color = MaterialTheme.colorScheme.outline)
+        }
+
+        TextButton(
+            modifier = Modifier.fillMaxWidth().fillMaxHeight().weight(1f),
+            shape = RectangleShape,
+            onClick = {
+                coroutineScope.launch {
+                    focusManager.clearFocus(true)
+                    currencyPickerState.sheetState.hide()
+                    onSelect(currencyPickerState.selectedCurrencyCode)
+                }
+            }) {
+            Text(text = "Select", color = MaterialTheme.colorScheme.primary)
+        }
+    }
+}

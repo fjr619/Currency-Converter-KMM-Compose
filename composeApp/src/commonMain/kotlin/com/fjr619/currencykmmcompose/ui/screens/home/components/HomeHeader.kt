@@ -3,11 +3,14 @@ package com.fjr619.currencykmmcompose.ui.screens.home.components
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -16,11 +19,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.dropUnlessResumed
 import com.fjr619.currencykmmcompose.domain.model.AmountInputType
 import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
 import com.fjr619.currencykmmcompose.domain.model.CurrencyType
@@ -76,25 +81,34 @@ fun HomeHeader(
 
         var animationStarted by remember { mutableStateOf(false) }
         val animatedRotation by animateFloatAsState(
-            targetValue = if (animationStarted) 180f else 0f,
+            targetValue = if (animationStarted) 270f else 90f,
             animationSpec = tween(durationMillis = 500)
         )
-        IconButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 6.dp, bottom = 4.dp)
-                .rotate(animatedRotation),
-            onClick = {
-                animationStarted = !animationStarted
-                onEvent(HomeEvent.SwitchCurrencies)
-            }
+
+        Box(
+            modifier = Modifier.height(IntrinsicSize.Max).fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                painter = painterResource(Res.drawable.switch_ic),
-                contentDescription = "Switch Icon",
-                tint = Color.White
-            )
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color.White))
+            IconButton(
+                modifier = Modifier
+                    .padding(top = 6.dp, bottom = 4.dp)
+                    .background(headerColor)
+                    .rotate(animatedRotation),
+                onClick = dropUnlessResumed {
+                    animationStarted = !animationStarted
+                    onEvent(HomeEvent.SwitchCurrencies)
+                }
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.switch_ic),
+                    contentDescription = "Switch Icon",
+                    tint = Color.White
+                )
+            }
         }
+
+
 
         CurrencyView(
             placeholder = "to",
@@ -109,31 +123,5 @@ fun HomeHeader(
             },
             consumeAnimatedResult = consumeAnimatedResult
         )
-
-//        AmountInput(
-//            amountInputType = AmountInputType.SOURCE,
-//            amount = state.sourceCurrencyAmount
-//        )
-
-//        Spacer(modifier = Modifier.height(12.dp))
-//
-//        CurrencyView(
-//            placeholder = "to",
-//            currency = state.targetCurrency,
-//            onClick = {
-//                onCurrencyTypeSelect(
-//                    CurrencyType.Source(CurrencyCode.valueOf(it.code))
-//                )
-//            }
-//        )
-//
-//        Spacer(modifier = Modifier.height(6.dp))
-//
-//        AmountInput(
-//            amountInputType = AmountInputType.TARGET,
-//            amount = state.targetCurrencyAmount,
-//            animatedResult = animatedResult,
-//            consumeAnimatedResult = consumeAnimatedResult
-//        )
     }
 }

@@ -20,6 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.fjr619.currencykmmcompose.ui.screens.home.backKey
+import currencykmmcompose.composeapp.generated.resources.Res
+import currencykmmcompose.composeapp.generated.resources.backspace
+import org.jetbrains.compose.resources.painterResource
 
 val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "C", backKey)
 
@@ -46,8 +49,8 @@ fun KeyboardButton(
             Text(text = key, fontSize = 32.sp, color = Color.White)
         } else {
             Icon(
-                modifier = Modifier.size(32.dp).rotate(270f),
-                imageVector = Icons.Filled.KeyboardArrowUp,
+                modifier = Modifier.size(32.dp),
+                painter = painterResource(Res.drawable.backspace),
                 contentDescription = "",
                 tint = Color.White
             )

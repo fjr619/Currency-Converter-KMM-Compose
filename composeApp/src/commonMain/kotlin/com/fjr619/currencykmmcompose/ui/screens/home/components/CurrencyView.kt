@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.dropUnlessResumed
 import com.fjr619.currencykmmcompose.domain.model.AmountInputType
 import com.fjr619.currencykmmcompose.domain.model.Currency
 import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
@@ -47,7 +48,6 @@ fun CurrencyView(
 ) {
     Column(
         modifier = Modifier
-//        modifier = Modifier.weight(1f)
     ) {
         Text(
             modifier = Modifier.padding(start = 12.dp),
@@ -55,6 +55,7 @@ fun CurrencyView(
             fontSize = MaterialTheme.typography.bodySmall.fontSize,
             color = Color.White
         )
+
         Spacer(modifier = Modifier.height(4.dp))
 
         Row(
@@ -70,11 +71,13 @@ fun CurrencyView(
                     .width(100.dp)
                     .fillMaxHeight()
                     .background(Color.White.copy(alpha = 0.05f))
-                    .clickable {
-                        currency?.let {
-                            onClick(it)
+                    .clickable(
+                        onClick = dropUnlessResumed {
+                            currency?.let {
+                                onClick(it)
+                            }
                         }
-                    },
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 androidx.compose.animation.AnimatedVisibility(

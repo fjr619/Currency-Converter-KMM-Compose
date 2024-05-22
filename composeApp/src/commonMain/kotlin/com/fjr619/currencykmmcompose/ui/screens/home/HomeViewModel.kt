@@ -5,15 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.fjr619.currencykmmcompose.domain.model.CurrencyType
 import com.fjr619.currencykmmcompose.domain.model.RateStatus
 import com.fjr619.currencykmmcompose.domain.repository.CurrencyRepository
+import com.fjr619.currencykmmcompose.ui.screens.home.components.backKey
+import com.fjr619.currencykmmcompose.ui.screens.home.components.clearKey
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -172,7 +169,6 @@ class HomeViewModel(
                         }
                     }
                 }
-
             }
         }
     }
@@ -223,7 +219,7 @@ class HomeViewModel(
         val currentCurrencyValue = state.value.sourceCurrencyAmount
         _updatedCurrencyValue.update {
             when (value) {
-                "C" -> "0"
+                clearKey -> "0"
                 else -> {
                     if (value != backKey) {
                         if (currentCurrencyValue == "0") value else {

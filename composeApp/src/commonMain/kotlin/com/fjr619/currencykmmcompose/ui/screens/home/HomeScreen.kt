@@ -92,7 +92,7 @@ fun HomeScreen() {
                         backgroundColor = if (key == "C") headerColor
                         else headerColor,
                         onClick = {
-                            viewModel.onEvent(HomeEvent.NumberButtonClicked(key))
+                            viewModel.onEvent(HomeEvent.NumberButtonClicked(it))
                         }
                     )
                 }
@@ -101,4 +101,3 @@ fun HomeScreen() {
     }
 }
 
-const val backKey = "<-"

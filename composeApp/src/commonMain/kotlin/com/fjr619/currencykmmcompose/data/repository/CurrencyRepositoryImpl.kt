@@ -11,21 +11,16 @@ import com.fjr619.currencykmmcompose.domain.model.Currency
 import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
 import com.fjr619.currencykmmcompose.domain.repository.CurrencyRepository
 import com.fjr619.currencykmmcompose.utils.Constant
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -36,8 +31,6 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.until
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.TimeMark
-import kotlin.time.TimeSource
 
 class CurrencyRepositoryImpl(
     private val remoteDataSource: RemoteDataSource,
@@ -72,7 +65,6 @@ class CurrencyRepositoryImpl(
 
             val avaiableCurrencies = response.data.values
                 .filter { currency -> avaiableCurrencyCodes.contains(currency.code) }
-
 
 
             //update database
@@ -133,7 +125,8 @@ class CurrencyRepositoryImpl(
                 val savedInstant = Instant.fromEpochMilliseconds(savedTimestamp)
 
                 val result = tickerFlow(1.seconds).map {
-                    currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                    currentDateTime =
+                        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
                     val difference = savedInstant.until(
                         currentDateTime.toInstant(TimeZone.currentSystemDefault()),
                         DateTimeUnit.DAY,
@@ -159,7 +152,7 @@ class CurrencyRepositoryImpl(
                         if (!isDataFresh().first()) {
                             println("DATA NOT FRESH")
                             cacheTheData({
-                                       emit(Result.success(it))
+                                emit(Result.success(it))
                             }, {
                                 emit(Result.failure(Throwable(message = it)))
                             })

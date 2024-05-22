@@ -133,7 +133,7 @@ class CurrencyRepositoryImpl(
                 currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
                 val difference = savedInstant.until(
                     currentDateTime.toInstant(TimeZone.currentSystemDefault()),
-                    DateTimeUnit.DAY,
+                    DateTimeUnit.HOUR,
                     TimeZone.currentSystemDefault()
                 )
 

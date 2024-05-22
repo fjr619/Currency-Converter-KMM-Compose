@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,18 +53,11 @@ fun HomeHeader(
     ) {
         RatesStatus(
             status = state.rateState,
-            onRatesRefresh = { TODO() }
+            onRatesRefresh = {
+                onEvent(HomeEvent.FetchRates)
+            }
         )
         Spacer(modifier = Modifier.height(12.dp))
-//        CurrencyChoices(
-//            source = state.sourceCurrency,
-//            target = state.targetCurrency,
-//            onSwitch = {
-//                onEvent(HomeEvent.SwitchCurrencies)
-//            },
-//            onCurrencyTypeSelect = onCurrencyTypeSelect
-//        )
-//        Spacer(modifier = Modifier.height(12.dp))
 
         CurrencyView(
             placeholder = "from",
@@ -79,36 +71,9 @@ fun HomeHeader(
             }
         )
 
-        var animationStarted by remember { mutableStateOf(false) }
-        val animatedRotation by animateFloatAsState(
-            targetValue = if (animationStarted) 270f else 90f,
-            animationSpec = tween(durationMillis = 500)
-        )
-
-        Box(
-            modifier = Modifier.height(IntrinsicSize.Max).fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color.White))
-            IconButton(
-                modifier = Modifier
-                    .padding(top = 6.dp, bottom = 4.dp)
-                    .background(headerColor)
-                    .rotate(animatedRotation),
-                onClick = dropUnlessResumed {
-                    animationStarted = !animationStarted
-                    onEvent(HomeEvent.SwitchCurrencies)
-                }
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.switch_ic),
-                    contentDescription = "Switch Icon",
-                    tint = Color.White
-                )
-            }
+        SwapCurrency {
+            onEvent(HomeEvent.SwitchCurrencies)
         }
-
-
 
         CurrencyView(
             placeholder = "to",

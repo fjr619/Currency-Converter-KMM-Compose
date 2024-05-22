@@ -2,19 +2,13 @@ package com.fjr619.currencykmmcompose.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fjr619.currencykmmcompose.domain.model.CurrencyCode
 import com.fjr619.currencykmmcompose.domain.model.CurrencyType
 import com.fjr619.currencykmmcompose.domain.model.RateStatus
 import com.fjr619.currencykmmcompose.domain.repository.CurrencyRepository
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -25,7 +19,9 @@ class HomeViewModel(
     private val _state = MutableStateFlow(HomeUiState())
     val state = _state.asStateFlow()
 
-    private val _updatedCurrencyValue:MutableStateFlow<String> = MutableStateFlow("")
+    private val _updatedCurrencyValue: MutableStateFlow<String> = MutableStateFlow("")
+
+    private lateinit var jobDataFresh: Job
 
     init {
         println("INI HOME VM")
@@ -34,7 +30,7 @@ class HomeViewModel(
         onEvent(HomeEvent.ReadTargetCurrencyCode)
 
         viewModelScope.launch {
-            _updatedCurrencyValue.collect{ value ->
+            _updatedCurrencyValue.collect { value ->
                 _state.update {
                     it.copy(
                         sourceCurrencyAmount = value,
@@ -55,13 +51,12 @@ class HomeViewModel(
     }
 
 
-
     private fun convert(amount: String): Double {
         val source = state.value.sourceCurrency?.value
         val target = state.value.targetCurrency?.value
 
         val exchangeRate = if (source != null && target != null) {
-            target/source
+            target / source
         } else 1.0
 
         return if (amount.isEmpty()) 0.0
@@ -100,17 +95,23 @@ class HomeViewModel(
         }
     }
 
+
     private fun fetchNewRates() {
-        viewModelScope.launch {
+        if (::jobDataFresh.isInitialized) {
+            jobDataFresh.cancel()
+        }
+
+        jobDataFresh = viewModelScope.launch {
             _state.update {
-                it.copy(loading = true)
+                it.copy(
+                    rateState = RateStatus.Loading
+                )
             }
 
             currencyRepository.fetchNewRates(
                 onSucceed = { list ->
                     _state.update {
                         it.copy(
-                            loading = false,
                             currencyRates = list
                         )
                     }
@@ -119,13 +120,13 @@ class HomeViewModel(
                 onFailled = {
                     _state.update {
                         it.copy(
-                            loading = false
+                            rateState = RateStatus.Error
                         )
                     }
                 }
             )
 
-            currencyRepository.isDataFresh().collect { fresh ->
+            currencyRepository.isDataFresh().collectLatest { fresh ->
                 _state.update {
                     it.copy(
                         rateState = if (fresh) RateStatus.Fresh else RateStatus.Stale
@@ -158,7 +159,8 @@ class HomeViewModel(
         viewModelScope.launch {
             currencyRepository.readSourceCurrencyCode().collectLatest { currencyCode ->
                 state.collect { homeuiState ->
-                    val selectedCurrency = homeuiState.currencyRates.find { it.code == currencyCode.name }
+                    val selectedCurrency =
+                        homeuiState.currencyRates.find { it.code == currencyCode.name }
                     selectedCurrency?.let { nonNullData ->
                         _state.update {
                             it.copy(
@@ -183,7 +185,8 @@ class HomeViewModel(
         viewModelScope.launch {
             currencyRepository.readTargetCurrencyCode().collectLatest { currencyCode ->
                 state.collect { homeuiState ->
-                    val selectedCurrency = homeuiState.currencyRates.find { it.code == currencyCode.name }
+                    val selectedCurrency =
+                        homeuiState.currencyRates.find { it.code == currencyCode.name }
                     selectedCurrency?.let { nonNullData ->
                         _state.update {
                             it.copy(

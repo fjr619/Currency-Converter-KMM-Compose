@@ -74,6 +74,7 @@ val seed = Color(0xFF006B58)
 
 val freshColor = Color(0xFF44FF78)
 val staleColor = Color(0xFFFF9E44)
+val errorColor = Color(0xFFEB4896)
 
 val primaryColor
     @Composable

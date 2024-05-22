@@ -13,12 +13,14 @@ import com.fjr619.currencykmmcompose.domain.repository.CurrencyRepository
 import com.fjr619.currencykmmcompose.utils.Constant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
@@ -97,8 +99,8 @@ class CurrencyRepositoryImpl(
     }
 
     private suspend fun cacheTheData(
-        onSucceed: (List<Currency>) -> Unit,
-        onFailled: () -> Unit
+        onSucceed: suspend (List<Currency>) -> Unit,
+        onFailled: suspend (message: String) -> Unit
     ) {
         val fetchedData = getLatestExchangeRatesFromNetwork()
         if (fetchedData.isSuccess) {
@@ -108,72 +110,86 @@ class CurrencyRepositoryImpl(
                 onSucceed(nonNullData)
             } ?: run {
                 println("FETCHING NETWORK DONE, HAS NULL DATA")
-                onFailled()
+                onFailled("FETCHING NETWORK DONE, HAS NULL DATA")
             }
         } else {
             println("FETCHING NETWORK ERROR ${fetchedData.exceptionOrNull()?.message}")
-            onFailled()
+            onFailled("FETCHING NETWORK ERROR ${fetchedData.exceptionOrNull()?.message}")
         }
 
 
     }
 
-    override suspend fun isDataFresh(): Flow<Boolean> {
-        val savedTimestamp = preferencesDataSource.getPreference(
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun isDataFresh(): Flow<Boolean> {
+        return preferencesDataSource.getPreference(
             key = Constant.KEY_TIMESTAMP,
             defaultValue = 0L
-        ).first()
+        ).flatMapLatest {
+            val savedTimestamp = it
+            if (savedTimestamp != 0L) {
 
-        if (savedTimestamp != 0L) {
+                var currentDateTime: LocalDateTime
+                val savedInstant = Instant.fromEpochMilliseconds(savedTimestamp)
 
-            var currentDateTime: LocalDateTime
-            val savedInstant = Instant.fromEpochMilliseconds(savedTimestamp)
+                val result = tickerFlow(1.seconds).map {
+                    currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                    val difference = savedInstant.until(
+                        currentDateTime.toInstant(TimeZone.currentSystemDefault()),
+                        DateTimeUnit.DAY,
+                        TimeZone.currentSystemDefault()
+                    )
 
-            val result = tickerFlow(1.seconds).map {
-                currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-                val difference = savedInstant.until(
-                    currentDateTime.toInstant(TimeZone.currentSystemDefault()),
-                    DateTimeUnit.HOUR,
-                    TimeZone.currentSystemDefault()
-                )
+                    difference < 1
+                }
 
-                difference < 1
-            }
+                result
 
-            return result
-
-        } else return flow { emit(false) }
+            } else flow { emit(false) }.flowOn(Dispatchers.IO)
+        }
     }
 
-    override suspend fun fetchNewRates(
-        onSucceed: (List<Currency>) -> Unit,
-        onFailled: () -> Unit
-    ) {
-        val localCache = readLocalCurrencyDatas().first()
-        if (localCache.isSuccess) {
-            val data = localCache.getOrNull()
-            data?.let { nonNullData ->
-                if (nonNullData.isNotEmpty()) {
-                    if (!isDataFresh().first()) {
-                        println("DATA NOT FRESH")
-                        cacheTheData(onSucceed, onFailled)
-                    } else {
-                        println("DATA IS FRESH")
-                        onSucceed(nonNullData)
-                    }
+    override suspend fun fetchNewRates(): Flow<Result<List<Currency>>> {
+        return flow {
+            val localCache = readLocalCurrencyDatas().first()
+            if (localCache.isSuccess) {
+                val data = localCache.getOrNull()
+                data?.let { nonNullData ->
+                    if (nonNullData.isNotEmpty()) {
+                        if (!isDataFresh().first()) {
+                            println("DATA NOT FRESH")
+                            cacheTheData({
+                                       emit(Result.success(it))
+                            }, {
+                                emit(Result.failure(Throwable(message = it)))
+                            })
+                        } else {
+                            println("DATA IS FRESH")
+                            emit(Result.success(nonNullData))
+                        }
 
-                } else {
+                    } else {
+                        println("DATABASE NEEDS DATA")
+                        cacheTheData({
+                            emit(Result.success(it))
+                        }, {
+                            emit(Result.failure(Throwable(message = it)))
+                        })
+                    }
+                } ?: run {
                     println("DATABASE NEEDS DATA")
-                    cacheTheData(onSucceed, onFailled)
+                    cacheTheData({
+                        emit(Result.success(it))
+                    }, {
+                        emit(Result.failure(Throwable(message = it)))
+                    })
                 }
-            } ?: run {
-                println("DATABASE NEEDS DATA")
-                cacheTheData(onSucceed, onFailled)
+            } else {
+                println("ERROR READING LOCAL DATABASE")
+                emit(Result.failure(Throwable(message = "ERROR READING LOCAL DATABASE")))
             }
-        } else {
-            println("ERROR READING LOCAL DATABASE")
-            onFailled()
         }
+
     }
 
     override suspend fun saveSourceCurrencyCode(code: String) {

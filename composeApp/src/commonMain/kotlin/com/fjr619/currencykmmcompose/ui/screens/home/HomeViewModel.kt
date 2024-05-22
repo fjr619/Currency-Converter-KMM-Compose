@@ -6,9 +6,14 @@ import com.fjr619.currencykmmcompose.domain.model.CurrencyType
 import com.fjr619.currencykmmcompose.domain.model.RateStatus
 import com.fjr619.currencykmmcompose.domain.repository.CurrencyRepository
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -108,23 +113,21 @@ class HomeViewModel(
                 )
             }
 
-            currencyRepository.fetchNewRates(
-                onSucceed = { list ->
+            currencyRepository.fetchNewRates().collectLatest { result ->
+                if (result.isSuccess) {
                     _state.update {
                         it.copy(
-                            currencyRates = list
+                            currencyRates = result.getOrElse { listOf() }
                         )
                     }
-                },
-
-                onFailled = {
+                } else if (result.isFailure) {
                     _state.update {
                         it.copy(
                             rateState = RateStatus.Error
                         )
                     }
                 }
-            )
+            }
 
             currencyRepository.isDataFresh().collectLatest { fresh ->
                 _state.update {

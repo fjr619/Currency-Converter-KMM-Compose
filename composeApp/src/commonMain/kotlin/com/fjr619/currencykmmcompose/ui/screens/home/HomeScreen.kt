@@ -8,11 +8,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -26,7 +28,9 @@ import com.fjr619.currencykmmcompose.ui.screens.home.components.KeyboardButton
 import com.fjr619.currencykmmcompose.ui.screens.home.components.keys
 import com.fjr619.currencykmmcompose.ui.screens.home.components.rememberCurrencyPickerState
 import com.fjr619.currencykmmcompose.ui.theme.headerColor
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
     Surface(
@@ -38,25 +42,32 @@ fun HomeScreen() {
         var selectedCurrencyType: CurrencyType by remember {
             mutableStateOf(CurrencyType.None)
         }
+        val scope = rememberCoroutineScope()
 
         if (dialogOpened && selectedCurrencyType != CurrencyType.None) {
+            val currencyPickerState = rememberCurrencyPickerState(
+                currencyType = selectedCurrencyType,
+                currencyList = state.currencyRates
+            )
             CurrencyPicker(
-                currencyPickerState = rememberCurrencyPickerState(
-                    currencyType = selectedCurrencyType,
-                    currencyList = state.currencyRates
-                ),
+                currencyPickerState = currencyPickerState,
                 onSelect = {
                     viewModel.onEvent(
                         HomeEvent.SaveSelectedCurrencyCode(
                             selectedCurrencyType, it
                         )
                     )
-                    dialogOpened = false
-                    selectedCurrencyType = CurrencyType.None
+
+                    scope.launch {
+                        currencyPickerState.sheetState.hide()
+                        selectedCurrencyType = CurrencyType.None
+                    }
                 },
                 onDismiss = {
-                    dialogOpened = false
-                    selectedCurrencyType = CurrencyType.None
+                    scope.launch {
+                        currencyPickerState.sheetState.hide()
+                        selectedCurrencyType = CurrencyType.None
+                    }
                 }
             )
         }

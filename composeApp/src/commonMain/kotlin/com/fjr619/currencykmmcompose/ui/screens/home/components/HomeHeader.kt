@@ -83,7 +83,7 @@ fun HomeHeader(
             animatedResult = animatedResult,
             onClick = {
                 onCurrencyTypeSelect(
-                    CurrencyType.Source(CurrencyCode.valueOf(it.code))
+                    CurrencyType.Target(CurrencyCode.valueOf(it.code))
                 )
             },
             consumeAnimatedResult = consumeAnimatedResult
